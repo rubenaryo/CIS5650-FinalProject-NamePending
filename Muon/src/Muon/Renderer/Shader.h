@@ -32,10 +32,10 @@ enum class Semantics : semantic_t
 
 struct VertexBufferDescription
 {
-    Semantics* SemanticsArr;
-    uint16_t*  ByteOffsets;
-    uint16_t   AttrCount;
-    uint16_t   ByteSize;
+    Semantics* SemanticsArr = nullptr;
+    uint16_t*  ByteOffsets = nullptr;
+    uint16_t   AttrCount = 0;
+    uint16_t   ByteSize = 0;
 };
 #pragma endregion
 
@@ -66,6 +66,16 @@ struct PixelShader
     ID3D11SamplerState* SamplerState;
     ID3D11PixelShader*  Shader;
 };
+
+
+struct PixelShader_DX12
+{
+    PixelShader_DX12(const wchar_t* path);
+
+    Microsoft::WRL::ComPtr<ID3DBlob> ShaderBlob;
+    BOOL Initialized = false;
+};
+
 }
 
 #endif

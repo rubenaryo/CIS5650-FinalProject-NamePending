@@ -186,4 +186,12 @@ VertexShader_DX12::~VertexShader_DX12()
     delete[] VertexDesc.ByteOffsets;
 }
 
+PixelShader_DX12::PixelShader_DX12(const wchar_t* path)
+{
+    HRESULT hr = D3DReadFileToBlob(path, this->ShaderBlob.GetAddressOf());
+    COM_EXCEPT(hr);
+
+    Initialized = true;
+}
+
 }

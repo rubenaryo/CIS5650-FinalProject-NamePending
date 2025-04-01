@@ -71,7 +71,9 @@ bool Game::InitDX12(HWND window, int width, int height)
     mpCamera = new Renderer::Camera(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
 
     static const std::wstring VS_PATH = SHADERPATHW "SimpleVS.cso";
+    static const std::wstring PS_PATH = SHADERPATHW "SimplePS.cso";
     Renderer::VertexShader_DX12 simpleVS(VS_PATH.c_str());
+    Renderer::PixelShader_DX12 simplePS(PS_PATH.c_str());
 
     return success;
 }
