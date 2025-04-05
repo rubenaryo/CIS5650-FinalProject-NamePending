@@ -18,9 +18,15 @@ namespace Muon
 {
 	ID3D12Device* GetDevice();
 	ID3D12CommandQueue* GetCommandQueue();
+	ID3D12GraphicsCommandList* GetCommandList();
+	ID3D12CommandAllocator* GetCommandAllocator();
 	ID3D12Fence* GetFence();
+	ID3D12RootSignature* GetRootSignature();
 
-	bool PopulateCommandList();
+	bool ResetCommandList();
+	bool CloseCommandList();
+	bool PrepareForRender();
+	bool FinalizeRender();
 	bool ExecuteCommandList();
 	bool Present();
 	bool WaitForPreviousFrame();

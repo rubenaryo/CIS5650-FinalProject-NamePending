@@ -50,8 +50,11 @@ struct VertexShader
 
 struct VertexShader_DX12
 {
+    VertexShader_DX12() = default;
     VertexShader_DX12(const wchar_t* path);
     ~VertexShader_DX12();
+
+    bool Init(const wchar_t* path);
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> InputElements;
     Microsoft::WRL::ComPtr<ID3DBlob> ShaderBlob;
@@ -70,7 +73,10 @@ struct PixelShader
 
 struct PixelShader_DX12
 {
+    PixelShader_DX12() = default;
     PixelShader_DX12(const wchar_t* path);
+    
+    bool Init(const wchar_t* path);
 
     Microsoft::WRL::ComPtr<ID3DBlob> ShaderBlob;
     BOOL Initialized = false;

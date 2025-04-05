@@ -38,4 +38,9 @@ namespace Muon
 		va_end(ap);
 		Print(buffer);
 	}
+
+	inline UINT MUON_API AlignToBoundary(UINT size, UINT alignment)
+	{
+		return (size + (alignment - 1)) & ~(alignment - 1);
+	}
 }

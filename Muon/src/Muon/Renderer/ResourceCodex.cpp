@@ -6,6 +6,7 @@ Description : Master Resource Distributor
 #include "ResourceCodex.h"
 
 #include <Muon/Core/PathMacros.h>
+#include <Muon/Utils/Utils.h>
 
 #include "Factories.h"
 #include "Material.h"
@@ -21,32 +22,33 @@ MeshID ResourceCodex::AddMeshFromFile(const char* fileName, const VertexBufferDe
 {
     ResourceCodex& codexInstance = GetSingleton();
 
-    Mesh mesh;
-    MeshID id = MeshFactory::CreateMesh(fileName, vertAttr, pDevice, &mesh);
+    Mesh_DX12 mesh;
+    //MeshID id = MeshFactory::CreateMesh(fileName, vertAttr, pDevice, &mesh);
+    MeshID id = MeshFactory::CreateMesh(fileName, vertAttr, mesh);
     auto& hashtable = codexInstance.mMeshMap;
     
     if (hashtable.find(id) == hashtable.end())
     {
-        const Mesh c_Mesh = mesh;
-        codexInstance.mMeshMap.insert(std::pair<MeshID, const Mesh>(id, c_Mesh));
+        codexInstance.mMeshMap.insert(std::pair<MeshID, Mesh_DX12>(id, mesh));
     }
     else
     {
         #if defined(MN_DEBUG)
-            OutputDebugStringA("ERROR: Tried to insert repeat mesh\n");
+            Muon::Print("ERROR: Tried to insert repeat mesh\n");
         #endif
         assert(false);
     }
     return id;
 }
 
-void ResourceCodex::Init(ID3D11Device* device, ID3D11DeviceContext* context)
+void ResourceCodex::Init()
 {
     ResourceCodex& codexInstance = GetSingleton();
-    
-    TextureFactory::LoadAllTextures(device, context, codexInstance);
-    ShaderFactory::LoadAllShaders(device, codexInstance);
-    MaterialFactory::CreateAllMaterials(device, codexInstance);
+    codexInstance.mMeshStagingBuffer.Create(L"Mesh Staging Buffer", 64 * 1024 * 1024);
+
+    //TextureFactory::LoadAllTextures(device, context, codexInstance);
+    //ShaderFactory::LoadAllShaders(device, codexInstance);
+    //MaterialFactory::CreateAllMaterials(device, codexInstance);
 }
 
 void ResourceCodex::Destroy()
@@ -91,7 +93,7 @@ void ResourceCodex::Destroy()
             if(srv) srv->Release();
 }
 
-const Mesh* ResourceCodex::GetMesh(MeshID UID) const
+const Mesh_DX12* ResourceCodex::GetMesh(MeshID UID) const
 {
     if(mMeshMap.find(UID) != mMeshMap.end())
         return &mMeshMap.at(UID);

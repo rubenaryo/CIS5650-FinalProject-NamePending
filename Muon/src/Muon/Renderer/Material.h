@@ -13,6 +13,9 @@ namespace Renderer
 {
 struct VertexShader;
 struct PixelShader;
+struct GraphicsPipelineState;
+struct VertexShader_DX12;
+struct PixelShader_DX12;
 }
 
 namespace Renderer {
@@ -41,6 +44,12 @@ struct Material
     ID3D11RasterizerState*      RasterStateOverride = nullptr;
     ID3D11DepthStencilState*    DepthStencilStateOverride = nullptr;
     cbMaterialParams            Description;
+};
+
+struct Material_DX12
+{
+    const VertexShader_DX12* VS = nullptr;
+    const PixelShader_DX12* PS = nullptr;
 };
     
 

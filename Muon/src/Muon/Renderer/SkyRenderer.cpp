@@ -30,7 +30,7 @@ void SkyRenderer::Init(ID3D11Device* device)
     }
 
     SkyMaterialCopy = *pSkyMaterial;
-    CubeMesh = codex.GetMesh(kSkyMeshID);
+    //CubeMesh = codex.GetMesh(kSkyMeshID);
 
     assert(SkyMaterialCopy.VS);
     assert(SkyMaterialCopy.PS);

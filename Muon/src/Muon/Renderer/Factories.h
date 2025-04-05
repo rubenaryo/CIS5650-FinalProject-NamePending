@@ -38,7 +38,8 @@ struct TextureFactory final
 
 struct MeshFactory final
 {
-    static MeshID CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, ID3D11Device* pDevice, Mesh* out_mesh);
+    static MeshID CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, Mesh_DX12& out_meshDX12);
+    static void LoadAllMeshes();
 };
 
 struct MaterialFactory final

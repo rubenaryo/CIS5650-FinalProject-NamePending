@@ -17,11 +17,12 @@
 #include <DDSTextureLoader.h>
 #include <WICTextureLoader.h>
 
+#include <Muon/Utils/Utils.h>
 #include <unordered_map>
 
 namespace Renderer {
 
-MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, ID3D11Device* pDevice, Mesh* out_mesh)
+MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, Mesh_DX12& out_meshDX12)
 {
     Assimp::Importer Importer;
     MeshID meshId = fnv1a(fileName);
@@ -114,6 +115,7 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
                 indices[ind++] = face.mIndices[2];
             }
             
+#if 0
             Mesh tempMesh;
 
             // Populate Mesh's DX objects
@@ -150,7 +152,11 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
             #endif
 
             *out_mesh = tempMesh;
-
+#else
+            bool success = out_meshDX12.Init(reinterpret_cast<void*>(vertices), vertDesc.ByteSize * numVertices, vertDesc.ByteSize, reinterpret_cast<void*>(indices), sizeof(unsigned int) * numIndices, numIndices, DXGI_FORMAT_R32_UINT);
+            if (!success)
+                Muon::Print("Failed to init mesh!\n");
+#endif
             free(vertices);
             free(indices);
         }
@@ -177,12 +183,16 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
     strcat_s(vbName, "\0");
     strcat_s(ibName, "\0");
     
-    HRESULT hr = out_mesh->VertexBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(vbName), vbName);
-    COM_EXCEPT(hr);
-    hr = out_mesh->IndexBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(ibName), ibName);
-    COM_EXCEPT(hr);
+    //HRESULT hr = out_mesh->VertexBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(vbName), vbName);
+    //COM_EXCEPT(hr);
+    //hr = out_mesh->IndexBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(ibName), ibName);
+    //COM_EXCEPT(hr);
     #endif
     return meshId;
+}
+
+void MeshFactory::LoadAllMeshes()
+{
 }
 
 void ShaderFactory::LoadAllShaders(ID3D11Device* device, ResourceCodex& codex)

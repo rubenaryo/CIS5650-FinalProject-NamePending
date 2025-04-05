@@ -71,13 +71,14 @@ namespace Muon
 
     ID3D12Device* GetDevice() { return gDevice; }
     ID3D12Fence* GetFence() { return gFence; }
+    ID3D12RootSignature* GetRootSignature() { return gRootSig; }
     UINT GetRTVDescriptorSize() { return gRTVSize; }
     UINT GetDSVDescriptorSize() { return gDSVSize; }
     UINT GetCBVDescriptorSize() { return gCBVSize; }
     UINT GetMSAAQualityLevel() { return gMSAAQuality; }
     ID3D12CommandQueue* GetCommandQueue() { return gCommandQueue; }
-    ID3D12CommandAllocator* GetCommandAllocator() { return gCommandAllocator; }
     ID3D12GraphicsCommandList* GetCommandList() { return gCommandList; }
+    ID3D12CommandAllocator* GetCommandAllocator() { return gCommandAllocator; }
     IDXGISwapChain3* GetSwapChain() { return gSwapChain.Get(); }
     DXGI_FORMAT GetBackBufferFormat() { return BackBufferFormat; }
     DXGI_FORMAT GetDepthStencilFormat() { return DepthStencilFormat; }
@@ -503,6 +504,7 @@ namespace Muon
         hr = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(out_state));
         COM_EXCEPT(hr);
 
+
         return SUCCEEDED(hr);
     }
     
@@ -550,7 +552,7 @@ namespace Muon
     
     /////////////////////////////////////////////////////////////////////
 
-    bool PopulateCommandList()
+    bool ResetCommandList()
     {
         ID3D12CommandAllocator* pAllocator = GetCommandAllocator();
         ID3D12GraphicsCommandList* pCommandList = GetCommandList();
@@ -564,6 +566,19 @@ namespace Muon
         hr = pCommandList->Reset(pAllocator, gPipelineState);
         COM_EXCEPT(hr);
 
+        return SUCCEEDED(hr);
+    }
+
+    bool CloseCommandList()
+    {
+        ID3D12GraphicsCommandList* pCommandList = GetCommandList();
+        return pCommandList && SUCCEEDED(pCommandList->Close());
+    }
+
+    bool PrepareForRender()
+    {
+        ID3D12GraphicsCommandList* pCommandList = GetCommandList();
+
         pCommandList->SetGraphicsRootSignature(gRootSig);
         pCommandList->RSSetViewports(1, &gViewport);
         pCommandList->RSSetScissorRects(1, &gScissorRect);
@@ -574,19 +589,19 @@ namespace Muon
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(gRTVHeap->GetCPUDescriptorHandleForHeapStart(), CurrentBackBuffer, gRTVSize);
         pCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
 
-        // Record commands
+        // Clear the back buffer
         const float clearColor[] = { 0.0f, 0.2f, 0.4f, 1.0f };
         pCommandList->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-        pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        pCommandList->IASetVertexBuffers(0, 1, &gVertexBufferView);
-        pCommandList->DrawInstanced(3, 1, 0, 0);
 
+        return true;
+    }
+
+    bool FinalizeRender()
+    {
         // Now set back buffer as present target
+        ID3D12GraphicsCommandList* pCommandList = GetCommandList();
         pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gSwapChainBuffers[CurrentBackBuffer], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
-
-        hr = pCommandList->Close();
-
-        return SUCCEEDED(hr);
+        return true;
     }
 
     bool ExecuteCommandList()
@@ -697,11 +712,11 @@ namespace Muon
         success &= CreateRootSig(GetDevice(), &gRootSig);
         CHECK_SUCCESS(success, "Error: Failed to create root signature.\n");
 
-        success &= LoadShaders(GetDevice(), GetCommandList(), gRootSig, &gPipelineState);
-        CHECK_SUCCESS(success, "Error: Failed to load shaders.\n");
+        //success &= LoadShaders(GetDevice(), GetCommandList(), gRootSig, &gPipelineState);
+        //CHECK_SUCCESS(success, "Error: Failed to load shaders.\n");
 
-        success &= CreateVertexBuffer(GetDevice(), (float)width / (float)height, &gVertexBufferView, &gVertexBuffer);
-        CHECK_SUCCESS(success, "Error: Failed create vertex buffer.\n");
+        //success &= CreateVertexBuffer(GetDevice(), (float)width / (float)height, &gVertexBufferView, &gVertexBuffer);
+        //CHECK_SUCCESS(success, "Error: Failed create vertex buffer.\n");
 
         // We've written a bunch of commands, close the list and execute it.
         hr = GetCommandList()->Close();

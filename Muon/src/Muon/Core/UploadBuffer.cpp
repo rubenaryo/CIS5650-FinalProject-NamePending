@@ -8,6 +8,7 @@ Description : Implementation of GPU Upload Buffers
 #include <d3dx12.h>
 #include <Muon/Core/DXCore.h>
 #include <Muon/Renderer/ThrowMacros.h>
+#include <Muon/Utils/Utils.h>
 
 namespace Muon
 {
@@ -54,31 +55,95 @@ void UploadBuffer::Create(const wchar_t* name, size_t size)
 		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(mpResource.GetAddressOf()));
 	COM_EXCEPT(hr);
 
-	mpResource->SetName(name);
+	mName = name;
+	mpResource->SetName(mName.c_str());
 }
 
 void UploadBuffer::TryDestroy()
 {
+	if (mMappedPtr)
+		Unmap(0, mBufferSize);
+
 	if (mpResource)
 		mpResource->Release();
 
 	mpResource = nullptr;
+	mName.clear();
+	mBufferSize = 0;
+	mOffset = 0;
 }
 
 void* UploadBuffer::Map()
 {
-	void* Memory;
-	mpResource->Map(0, &CD3DX12_RANGE(0, mBufferSize), &Memory);
-	return Memory;
+	if (mMappedPtr)
+	{
+		Print("Warning: Tried to Map() an already mapped upload buffer.");
+		return nullptr;
+	}
+
+	mpResource->Map(0, &CD3DX12_RANGE(0, mBufferSize), reinterpret_cast<void**>(&mMappedPtr));
+	return mMappedPtr;
 }
 
 void UploadBuffer::Unmap(size_t begin, size_t end)
 {
+	if (mMappedPtr == nullptr)
+	{
+		Print("Warning: Tried to Unmap() an unmapped upload buffer.");
+		return;
+	}
+
 	mpResource->Unmap(0, &CD3DX12_RANGE(begin, std::min<size_t>(end, mBufferSize)));
+	mMappedPtr = nullptr;
+}
+
+bool UploadBuffer::CanAllocate(UINT desiredSize, UINT alignment)
+{
+	if (mMappedPtr == nullptr || mpResource == nullptr)
+	{
+		// If the upload buffer doesn't exist or is uninitialized, we obviously can't allocate anything.
+		return false;
+	}
+
+	// Whether (after alignment) the requested size will be able to fit in the buffer
+	UINT aligned = Muon::AlignToBoundary(mOffset, alignment);
+	return aligned + desiredSize <= mBufferSize;
+}
+
+// All this really does is check if the desiredSize fits and then returns a pointer to where data should be inserted.
+bool UploadBuffer::Allocate(UINT desiredSize, UINT alignment, void*& out_mappedPtr, D3D12_GPU_VIRTUAL_ADDRESS& out_gpuAddr, UINT& out_offset)
+{
+	if (mMappedPtr == nullptr || mpResource == nullptr)
+	{
+		Muon::Printf("Error: Attempted Allocate() on an uncreated or unmapped UploadBuffer.");
+		return false;
+	}
+
+	// Puts the current offset on the next requested alignment boundary
+	UINT aligned = Muon::AlignToBoundary(mOffset, alignment);
+
+	if (aligned + desiredSize > mBufferSize)
+	{
+		// We don't have enough space for this allocation
+		// TODO: Maybe do a re-Create() operation? Will be expensive.
+		Muon::Printf("Error: Upload Buffer failed to allocate %u bytes. Only have %u / %u space remaining.", desiredSize, (mBufferSize - aligned), mBufferSize);
+		return false;
+	}
+
+	// Return the addresses beginning at the unoccupied aligned offset
+	out_mappedPtr = mMappedPtr + aligned;
+	out_gpuAddr = mpResource->GetGPUVirtualAddress() + aligned;
+	out_offset = aligned;
+
+	// Adjust write head
+	mOffset = aligned + desiredSize;
+
+	return true;
 }
 
 size_t GetConstantBufferSize(size_t desiredSize) 
 {
+	// TODO: AlignToBoundary(desiredSize, 256)?
 	return (desiredSize + 255) & ~255;
 }
 

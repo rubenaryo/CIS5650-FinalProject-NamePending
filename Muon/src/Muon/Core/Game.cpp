@@ -11,6 +11,7 @@ Description : Implementation of Game.h
 #include <Muon/Renderer/Camera.h>
 #include <Muon/Renderer/COMException.h>
 #include <Muon/Renderer/LightingManager.h>
+#include <Muon/Renderer/PipelineState.h>
 #include <Muon/Renderer/ResourceCodex.h>
 #include <Muon/Renderer/Shader.h>
 
@@ -43,7 +44,7 @@ bool Game::Init(HWND window, int width, int height)
     auto context = mDeviceResources.GetContext();
 
     // Init all game resources
-    ResourceCodex::Init(device, context);
+    ResourceCodex::Init();
     
     // Initialize game camera
     mpCamera = new Camera(-5.0f, 5.0f, -5.0f, width / (float)height, 0.1f, 100.0f, 1.5f, device, context);
@@ -64,16 +65,46 @@ bool Game::Init(HWND window, int width, int height)
     return true;
 }
 
+Renderer::Mesh_DX12 testMesh;
+Muon::GraphicsPipelineState testPSO;
 bool Game::InitDX12(HWND window, int width, int height)
 {
     bool success = Muon::Initialize(window, width, height);
+    Renderer::ResourceCodex::Init();
 
     mpCamera = new Renderer::Camera(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
 
-    static const std::wstring VS_PATH = SHADERPATHW "SimpleVS.cso";
-    static const std::wstring PS_PATH = SHADERPATHW "SimplePS.cso";
-    Renderer::VertexShader_DX12 simpleVS(VS_PATH.c_str());
-    Renderer::PixelShader_DX12 simplePS(PS_PATH.c_str());
+    // Describe and create the graphics pipeline state object (PSO).
+    static Renderer::VertexShader_DX12 testVS;
+    static Renderer::PixelShader_DX12 testPS;
+    testVS.Init(SHADERPATHW "SimpleVS.cso");
+    testPS.Init(SHADERPATHW "SimplePS.cso");
+    testPSO.SetRootSignature(Muon::GetRootSignature());
+    testPSO.SetVertexShader(testVS);
+    testPSO.SetPixelShader(testPS);
+    success = testPSO.Generate();
+
+
+    struct Vertex
+    {
+        float Pos[3];
+        float Col[4];
+    };
+
+    float aspectRatio = width / (float)height;
+    Vertex triangleVertices[] =
+    {
+        { { 0.0f, 0.25f * aspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        { { 0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+        { { -0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+    };
+
+    Muon::ResetCommandList();
+
+    testMesh.Init(triangleVertices, sizeof(triangleVertices), sizeof(Vertex), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
+
+    Muon::CloseCommandList();
+    Muon::ExecuteCommandList();
 
     return success;
 }
@@ -122,7 +153,12 @@ void Game::Render()
         return;
     }
 
-    Muon::PopulateCommandList();
+    Muon::ResetCommandList();
+    Muon::PrepareForRender();
+    testPSO.Bind();
+    testMesh.Draw(Muon::GetCommandList());
+    Muon::FinalizeRender();
+    Muon::CloseCommandList();
     Muon::ExecuteCommandList();
     Muon::Present();
     Muon::WaitForPreviousFrame();

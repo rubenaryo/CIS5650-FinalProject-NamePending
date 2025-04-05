@@ -169,11 +169,12 @@ void EntityRenderer::InstancedDraw(ID3D11DeviceContext* context)
     InstancedDrawContext* const drawCtxItEnd = InstancingPasses + InstancingPassCount;
     for (; drawCtx != drawCtxItEnd; ++drawCtx)
     {
-        const Mesh* const mesh = sg_Codex.GetMesh(drawCtx->InstancedMeshID);
+        //const Mesh* const mesh = sg_Codex.GetMesh(drawCtx->InstancedMeshID);
+        const Mesh_DX12* mesh = sg_Codex.GetMesh(drawCtx->InstancedMeshID);
 
-        ID3D11Buffer* vertBuffers[2];
+        ID3D12Resource* vertBuffers[2];
         vertBuffers[0] = mesh->VertexBuffer;        // Vertices
-        vertBuffers[1] = drawCtx->DynamicBuffer;    // Instanced World Matrices
+        //vertBuffers[1] = drawCtx->DynamicBuffer;    // Instanced World Matrices
 
         static const UINT strides[2] = 
         {
@@ -188,8 +189,8 @@ void EntityRenderer::InstancedDraw(ID3D11DeviceContext* context)
         };
 
 
-        context->IASetVertexBuffers(0, 2, &vertBuffers[0], &strides[0], &offsets[0]);
-        context->IASetIndexBuffer(mesh->IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+        //context->IASetVertexBuffers(0, 2, &vertBuffers[0], &strides[0], &offsets[0]);
+        //context->IASetIndexBuffer(mesh->IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
         // Setup VS,PS
         const Material mat = *sg_Codex.GetMaterial(drawCtx->MaterialIndex);

@@ -11,6 +11,7 @@ Description : Loads and distributes all static resources (materials, textures, e
 #include "Material.h"
 #include "Mesh.h"
 #include "Shader.h"
+#include <Muon/Core/UploadBuffer.h>
 
 #include <unordered_map>
 
@@ -42,28 +43,33 @@ public:
     static MeshID AddMeshFromFile(const char* fileName, const VertexBufferDescription* vertAttr, ID3D11Device* pDevice);
     
     // Singleton Stuff
-    static void Init(ID3D11Device* device, ID3D11DeviceContext* context);
+    static void Init();
     static void Destroy();
 
     inline static ResourceCodex& GetSingleton() { static ResourceCodex codexInstance; return codexInstance; }
 
-    const Mesh* GetMesh(MeshID UID) const;
+    //const Mesh* GetMesh(MeshID UID) const;
+    const Mesh_DX12* GetMesh(MeshID UID) const;
     const Material* GetMaterial(uint8_t materialIndex) const;
     const ResourceBindChord* GetTexture(TextureID UID) const;
     const VertexShader* GetVertexShader(ShaderID UID) const;
     const PixelShader* GetPixelShader(ShaderID UID) const;
+    Muon::UploadBuffer& GetStagingBuffer() { return mMeshStagingBuffer; }
 
 private:
 
     std::unordered_map<ShaderID, const VertexShader>  mVertexShaders;
     std::unordered_map<ShaderID, const PixelShader>   mPixelShaders;
-    std::unordered_map<MeshID, const Mesh>            mMeshMap;
+    std::unordered_map<MeshID, Mesh_DX12>            mMeshMap;
     std::unordered_map<TextureID, ResourceBindChord>   mTextureMap;
 
     // Materials are queried by index rather than by ID since it's done at runtime 
     // TODO: Need to do this for meshes as well.
     // TODO: Use fixed_vector?
     std::vector<Material> mMaterials;
+
+    // An intermediate upload buffer used for uploading vertex/index data to the GPU
+    Muon::UploadBuffer mMeshStagingBuffer;
 
     // Singleton stuff
     static ResourceCodex* CodexInstance;
