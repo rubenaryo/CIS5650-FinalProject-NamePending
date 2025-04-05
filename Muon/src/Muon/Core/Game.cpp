@@ -124,7 +124,7 @@ void Game::Frame()
 
     Render();
 
-    mDeviceResources.UpdateTitleBar(mTimer.GetFramesPerSecond(), mTimer.GetFrameCount());
+    Muon::UpdateTitleBar(mTimer.GetFramesPerSecond(), mTimer.GetFrameCount());
 }
 
 void Game::Update(StepTimer const& timer)

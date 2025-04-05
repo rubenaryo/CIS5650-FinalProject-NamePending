@@ -59,6 +59,11 @@ namespace Muon
 
     tagRECT gScissorRect;
 
+    HWND gHwnd;
+
+    D3D_FEATURE_LEVEL gFeatureLevel;
+    std::wstring gFeatureLevelStr(L"Direct3D ???");
+
     // TODO: Move these to the main application and generalize them. 
     ID3D12RootSignature* gRootSig = nullptr;
 
@@ -94,6 +99,18 @@ namespace Muon
     D3D12_CPU_DESCRIPTOR_HANDLE DepthStencilView()
     {
         return gDSVHeap->GetCPUDescriptorHandleForHeapStart();
+    }
+
+    const wchar_t* GetDirect3DNameForFeatureLevel(D3D_FEATURE_LEVEL level)
+    {
+        switch (level)
+        {
+        case D3D_FEATURE_LEVEL_12_2: return L"Direct3D 12.2";
+        case D3D_FEATURE_LEVEL_12_1: return L"Direct3D 12.1";
+        case D3D_FEATURE_LEVEL_12_0: return L"Direct3D 12.0";
+        }
+
+        return L"Direct3D ???";
     }
 
     /////////////////////////////////////////////////////////////////////
@@ -604,6 +621,52 @@ namespace Muon
         return true;
     }
 
+    bool CheckFeatureLevel(ID3D12Device* pDevice, D3D_FEATURE_LEVEL& outHighestLevel, std::wstring& outHighestLevelStr)
+    {
+        const D3D_FEATURE_LEVEL featureLevelsList[] = {
+            D3D_FEATURE_LEVEL_12_2,
+            D3D_FEATURE_LEVEL_12_1,
+            D3D_FEATURE_LEVEL_12_0,
+        };
+
+        D3D12_FEATURE_DATA_FEATURE_LEVELS featureLevels = {};
+        featureLevels.NumFeatureLevels = _countof(featureLevelsList);
+        featureLevels.pFeatureLevelsRequested = featureLevelsList;
+
+        HRESULT hr = pDevice->CheckFeatureSupport(D3D12_FEATURE_FEATURE_LEVELS,
+            &featureLevels,
+            sizeof(featureLevels));
+
+        if (FAILED(hr))
+            return false;
+
+        outHighestLevel = featureLevels.MaxSupportedFeatureLevel;
+        outHighestLevelStr.assign(GetDirect3DNameForFeatureLevel(outHighestLevel));
+        return true;
+    }
+
+    bool UpdateTitleBar(uint32_t fps, uint32_t frameCount)
+    {
+        // Update title bar every 120 frames
+        if (frameCount % 120 == 0)
+            return false;
+
+        std::wstringstream wss;
+
+        // Window Information
+        wss << L"Width: " << gViewport.Width <<
+            L"    Height: " << gViewport.Height <<
+            L"    FPS: " << fps;
+
+        wss << "    " << gFeatureLevelStr;
+
+        // MSAA Level
+        //wss << L"    " << mMSAASampleCount << L"xMSAA";
+
+        SetWindowText(gHwnd, wss.str().c_str());
+        return true;
+    }
+
     bool Initialize(HWND hwnd, int width, int height)
     {
         using Microsoft::WRL::ComPtr;
@@ -640,9 +703,13 @@ namespace Muon
             gDevice->Release();
     
         gDevice = pDevice.Detach();
+        gHwnd = hwnd;
 
         success &= GetDescriptorSizes(GetDevice(), &gRTVSize, &gDSVSize, &gCBVSize);
         CHECK_SUCCESS(success, "Error: Failed to get descriptor sizes!\n");
+
+        success &= CheckFeatureLevel(GetDevice(), gFeatureLevel, gFeatureLevelStr);
+        CHECK_SUCCESS(success, "Error: Failed to get feature level!\n");
 
         //success &= DetermineMSAAQuality(GetDevice(), &gMSAAQuality);
         //CHECK_SUCCESS(success, "Error: Failed to determine MSAA quality!");
