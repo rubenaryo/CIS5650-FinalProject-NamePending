@@ -49,7 +49,7 @@ public:
     inline static ResourceCodex& GetSingleton() { static ResourceCodex codexInstance; return codexInstance; }
 
     //const Mesh* GetMesh(MeshID UID) const;
-    const Mesh_DX12* GetMesh(MeshID UID) const;
+    const Mesh* GetMesh(MeshID UID) const;
     const Material* GetMaterial(uint8_t materialIndex) const;
     const ResourceBindChord* GetTexture(TextureID UID) const;
     const VertexShader* GetVertexShader(ShaderID UID) const;
@@ -60,7 +60,7 @@ private:
 
     std::unordered_map<ShaderID, VertexShader>  mVertexShaders;
     std::unordered_map<ShaderID, PixelShader>   mPixelShaders;
-    std::unordered_map<MeshID, Mesh_DX12>            mMeshMap;
+    std::unordered_map<MeshID, Mesh>            mMeshMap;
     std::unordered_map<TextureID, ResourceBindChord>   mTextureMap;
 
     // Materials are queried by index rather than by ID since it's done at runtime 

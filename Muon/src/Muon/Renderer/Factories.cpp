@@ -22,7 +22,7 @@
 
 namespace Renderer {
 
-MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, Mesh_DX12& out_meshDX12)
+MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, Mesh& out_meshDX12)
 {
     Assimp::Importer Importer;
     MeshID meshId = fnv1a(fileName);
@@ -312,10 +312,9 @@ void TextureFactory::LoadAllTextures(ID3D11Device* device, ID3D11DeviceContext* 
         #if defined(MN_DEBUG)
         if (pSRV)
         {
-            size_t byteSize;
-            char texDebugName[64];
-            wcstombs_s(&byteSize, texDebugName, name.c_str(), name.size());
-            hr = pSRV->SetPrivateData(WKPDID_D3DDebugObjectName, byteSize, texDebugName);
+            wchar_t texDebugName[64];
+            swprintf(texDebugName, 64, L"%s", name.c_str());
+            hr = pSRV->SetPrivateData(WKPDID_D3DDebugObjectNameW, 64 * sizeof(WCHAR), texDebugName);
             COM_EXCEPT(hr);
         }
         #endif

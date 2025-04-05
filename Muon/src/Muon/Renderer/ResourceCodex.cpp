@@ -22,14 +22,14 @@ MeshID ResourceCodex::AddMeshFromFile(const char* fileName, const VertexBufferDe
 {
     ResourceCodex& codexInstance = GetSingleton();
 
-    Mesh_DX12 mesh;
+    Mesh mesh;
     //MeshID id = MeshFactory::CreateMesh(fileName, vertAttr, pDevice, &mesh);
     MeshID id = MeshFactory::CreateMesh(fileName, vertAttr, mesh);
     auto& hashtable = codexInstance.mMeshMap;
     
     if (hashtable.find(id) == hashtable.end())
     {
-        codexInstance.mMeshMap.insert(std::pair<MeshID, Mesh_DX12>(id, mesh));
+        codexInstance.mMeshMap.insert(std::pair<MeshID, Mesh>(id, mesh));
     }
     else
     {
@@ -93,7 +93,7 @@ void ResourceCodex::Destroy()
             if(srv) srv->Release();
 }
 
-const Mesh_DX12* ResourceCodex::GetMesh(MeshID UID) const
+const Mesh* ResourceCodex::GetMesh(MeshID UID) const
 {
     if(mMeshMap.find(UID) != mMeshMap.end())
         return &mMeshMap.at(UID);

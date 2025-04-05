@@ -170,7 +170,7 @@ void EntityRenderer::InstancedDraw(ID3D11DeviceContext* context)
     for (; drawCtx != drawCtxItEnd; ++drawCtx)
     {
         //const Mesh* const mesh = sg_Codex.GetMesh(drawCtx->InstancedMeshID);
-        const Mesh_DX12* mesh = sg_Codex.GetMesh(drawCtx->InstancedMeshID);
+        const Mesh* mesh = sg_Codex.GetMesh(drawCtx->InstancedMeshID);
 
         ID3D12Resource* vertBuffers[2];
         vertBuffers[0] = mesh->VertexBuffer;        // Vertices

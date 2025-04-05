@@ -67,7 +67,7 @@ bool Game::Init(HWND window, int width, int height)
     return true;
 }
 
-Renderer::Mesh_DX12 testMesh;
+Renderer::Mesh testMesh;
 Muon::GraphicsPipelineState testPSO;
 bool Game::InitDX12(HWND window, int width, int height)
 {

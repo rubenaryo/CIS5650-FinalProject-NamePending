@@ -57,9 +57,9 @@ void SkyRenderer::Draw(ID3D11DeviceContext* context)
     UINT offsets = 0;
 
     // Bind the Cube Mesh
-    const Mesh mesh = *CubeMesh;
-    context->IASetVertexBuffers(0, 1, &mesh.VertexBuffer, &mesh.Stride, &offsets);
-    context->IASetIndexBuffer(mesh.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
+    //const Mesh mesh = *CubeMesh;
+    //context->IASetVertexBuffers(0, 1, &mesh.VertexBuffer, &mesh.Stride, &offsets);
+    //context->IASetIndexBuffer(mesh.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
     // Set Vertex Shader and Input
     //context->IASetInputLayout(SkyMaterialCopy.VS->InputLayout);
@@ -70,7 +70,7 @@ void SkyRenderer::Draw(ID3D11DeviceContext* context)
     //context->PSSetShader(SkyMaterialCopy.PS->Shader, 0, 0);
 
     // Submit Draw Call
-    context->DrawIndexed(mesh.IndexCount, 0, 0);
+    //context->DrawIndexed(mesh.IndexCount, 0, 0);
 
     // Reset states back to previous
     context->OMSetDepthStencilState(pCurrDepthStencilState, 0);

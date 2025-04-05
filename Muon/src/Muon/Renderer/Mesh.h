@@ -10,17 +10,10 @@ Description : Mesh stores the vertex,index buffers ready to be drawn by DirectX
 #include "Shader.h"
 
 namespace Renderer {
+
 struct Mesh
 {
-    ID3D11Buffer* VertexBuffer;
-    ID3D11Buffer* IndexBuffer;
-    UINT          IndexCount;
-    UINT          Stride;
-};
-
-struct Mesh_DX12
-{
-    ~Mesh_DX12();
+    ~Mesh();
     bool Init(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount, DXGI_FORMAT indexFormat);
     bool PopulateBuffers(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount);
     bool Draw(ID3D12GraphicsCommandList* pCommandList);

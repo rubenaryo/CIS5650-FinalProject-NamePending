@@ -34,7 +34,7 @@ bool CreateBuffer(void* bufferData, UINT bufferDataSize, ID3D12Resource*& out_bu
     return out_buffer != nullptr;
 }
 
-Mesh_DX12::~Mesh_DX12()
+Mesh::~Mesh()
 {
     // TODO: I think in DX12 we have to keep track of whether these are still in use by the GPU or not...
     if (IndexBuffer)
@@ -43,7 +43,7 @@ Mesh_DX12::~Mesh_DX12()
         VertexBuffer->Release();
 }
 
-bool Mesh_DX12::Init(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount, DXGI_FORMAT indexFormat)
+bool Mesh::Init(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount, DXGI_FORMAT indexFormat)
 {
     vertexDataSize = Muon::AlignToBoundary(vertexDataSize, 16);
 
@@ -81,7 +81,7 @@ bool Mesh_DX12::Init(void* vertexData, UINT vertexDataSize, UINT vertexStride, v
     return true;
 }
 
-bool Mesh_DX12::PopulateBuffers(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount)
+bool Mesh::PopulateBuffers(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount)
 {
     ResourceCodex& codex = ResourceCodex::GetSingleton();
     Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
@@ -166,7 +166,7 @@ bool Mesh_DX12::PopulateBuffers(void* vertexData, UINT vertexDataSize, UINT vert
     return true;
 }
 
-bool Mesh_DX12::Draw(ID3D12GraphicsCommandList* pCommandList)
+bool Mesh::Draw(ID3D12GraphicsCommandList* pCommandList)
 {
     pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     pCommandList->IASetVertexBuffers(0, 1, &VertexBufferView);
