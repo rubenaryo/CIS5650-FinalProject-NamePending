@@ -58,8 +58,8 @@ public:
 
 private:
 
-    std::unordered_map<ShaderID, const VertexShader>  mVertexShaders;
-    std::unordered_map<ShaderID, const PixelShader>   mPixelShaders;
+    std::unordered_map<ShaderID, VertexShader>  mVertexShaders;
+    std::unordered_map<ShaderID, PixelShader>   mPixelShaders;
     std::unordered_map<MeshID, Mesh_DX12>            mMeshMap;
     std::unordered_map<TextureID, ResourceBindChord>   mTextureMap;
 
@@ -82,8 +82,8 @@ private:
     MaterialIndex PushMaterial(const Material& material);
 
     friend struct ShaderFactory;
-    void AddVertexShader(ShaderID hash, const wchar_t* path, ID3D11Device* pDevice);
-    void AddPixelShader(ShaderID hash, const wchar_t* path, ID3D11Device* pDevice);
+    void AddVertexShader(ShaderID hash, const wchar_t* path);
+    void AddPixelShader(ShaderID hash, const wchar_t* path);
 };
 }
 #endif

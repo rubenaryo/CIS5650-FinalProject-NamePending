@@ -140,11 +140,14 @@ bool Mesh_DX12::PopulateBuffers(void* vertexData, UINT vertexDataSize, UINT vert
         D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER
     ));
 
-    pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
-        IndexBuffer,
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        D3D12_RESOURCE_STATE_INDEX_BUFFER
-    ));
+    if (bDoIndexBuffer)
+    {
+        pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+            IndexBuffer,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            D3D12_RESOURCE_STATE_INDEX_BUFFER
+        ));
+    }
 
     return true;
 }

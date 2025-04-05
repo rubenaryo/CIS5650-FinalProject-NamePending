@@ -33,7 +33,6 @@ namespace Muon
 
     ID3D12Fence* gFence = nullptr;
     UINT64 gFenceVal = 0;
-    HANDLE gFenceEvt = nullptr;
 
     UINT gRTVSize = 0;
     UINT gDSVSize = 0;
@@ -62,7 +61,6 @@ namespace Muon
 
     // TODO: Move these to the main application and generalize them. 
     ID3D12RootSignature* gRootSig = nullptr;
-    ID3D12PipelineState* gPipelineState = nullptr;
     ID3D12Resource* gVertexBuffer = nullptr;
     D3D12_VERTEX_BUFFER_VIEW gVertexBufferView;
 
@@ -215,14 +213,9 @@ namespace Muon
         COM_EXCEPT(hr);
 
         gFenceVal = 1;
-        gFenceEvt = CreateEvent(nullptr, false, false, nullptr);
-        if (!gFenceEvt)
-        {
-            hr = HRESULT_FROM_WIN32(GetLastError());
-            COM_EXCEPT(hr);
-        }
 
-        WaitForPreviousFrame();
+        FlushCommandQueue();
+        UpdateBackBufferIndex();
         return SUCCEEDED(hr);
     }
 
@@ -552,7 +545,7 @@ namespace Muon
     
     /////////////////////////////////////////////////////////////////////
 
-    bool ResetCommandList()
+    bool ResetCommandList(ID3D12PipelineState* pInitialPipelineState)
     {
         ID3D12CommandAllocator* pAllocator = GetCommandAllocator();
         ID3D12GraphicsCommandList* pCommandList = GetCommandList();
@@ -563,7 +556,7 @@ namespace Muon
         HRESULT hr = pAllocator->Reset();
         COM_EXCEPT(hr);
 
-        hr = pCommandList->Reset(pAllocator, gPipelineState);
+        hr = pCommandList->Reset(pAllocator, pInitialPipelineState);
         COM_EXCEPT(hr);
 
         return SUCCEEDED(hr);
@@ -624,7 +617,7 @@ namespace Muon
     }
 
     // This is not good but just doing this for testing DX12 Initialization...
-    bool WaitForPreviousFrame()
+    bool FlushCommandQueue()
     {
         const UINT64 currFence = gFenceVal;
         HRESULT hr = GetCommandQueue()->Signal(gFence, currFence);
@@ -632,13 +625,27 @@ namespace Muon
 
         if (gFence->GetCompletedValue() < currFence)
         {
-            hr = gFence->SetEventOnCompletion(currFence, gFenceEvt);
-            WaitForSingleObject(gFenceEvt, INFINITE);
+            HANDLE eventHandle = CreateEventEx(nullptr, false, false, EVENT_ALL_ACCESS);
+            if (!eventHandle)
+            {
+                hr = HRESULT_FROM_WIN32(GetLastError());
+                COM_EXCEPT(hr);
+            }
+            hr = gFence->SetEventOnCompletion(currFence, eventHandle);
+            WaitForSingleObject(eventHandle, INFINITE);
+            CloseHandle(eventHandle);
         }
 
-        CurrentBackBuffer = GetSwapChain()->GetCurrentBackBufferIndex();
-
         return SUCCEEDED(hr);
+    }
+
+    bool UpdateBackBufferIndex()
+    {
+        if (!GetSwapChain())
+            return false;
+
+        CurrentBackBuffer = GetSwapChain()->GetCurrentBackBufferIndex();
+        return true;
     }
 
     bool Initialize(HWND hwnd, int width, int height)
@@ -723,6 +730,8 @@ namespace Muon
         COM_EXCEPT(hr);
 
         ExecuteCommandList();
+        FlushCommandQueue();
+        UpdateBackBufferIndex();
     
         return success;
     }

@@ -14,8 +14,8 @@ namespace Renderer
 struct VertexShader;
 struct PixelShader;
 struct GraphicsPipelineState;
-struct VertexShader_DX12;
-struct PixelShader_DX12;
+struct VertexShader;
+struct PixelShader;
 }
 
 namespace Renderer {
@@ -48,8 +48,8 @@ struct Material
 
 struct Material_DX12
 {
-    const VertexShader_DX12* VS = nullptr;
-    const PixelShader_DX12* PS = nullptr;
+    const VertexShader* VS = nullptr;
+    const PixelShader* PS = nullptr;
 };
     
 

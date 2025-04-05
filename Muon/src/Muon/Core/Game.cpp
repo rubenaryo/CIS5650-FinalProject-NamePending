@@ -14,6 +14,8 @@ Description : Implementation of Game.h
 #include <Muon/Renderer/PipelineState.h>
 #include <Muon/Renderer/ResourceCodex.h>
 #include <Muon/Renderer/Shader.h>
+#include <Muon/Renderer/hash_util.h>
+#include <Muon/Utils/Utils.h>
 
 #define USE_DX11 0
 
@@ -69,21 +71,24 @@ Renderer::Mesh_DX12 testMesh;
 Muon::GraphicsPipelineState testPSO;
 bool Game::InitDX12(HWND window, int width, int height)
 {
-    bool success = Muon::Initialize(window, width, height);
-    Renderer::ResourceCodex::Init();
+    using namespace Renderer;
 
-    mpCamera = new Renderer::Camera(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
+    bool success = Muon::Initialize(window, width, height);
+    ResourceCodex::Init();
+
+    ResourceCodex& codex = ResourceCodex::GetSingleton();
+    const ShaderID kSimpleVSID = fnv1a(L"SimpleVS.cso");
+    const ShaderID kSimplePSID = fnv1a(L"SimplePS.cso");
+    const VertexShader* pVS = codex.GetVertexShader(kSimpleVSID);
+    const PixelShader* pPS = codex.GetPixelShader(kSimplePSID);
+
+    mpCamera = new Camera(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
 
     // Describe and create the graphics pipeline state object (PSO).
-    static Renderer::VertexShader_DX12 testVS;
-    static Renderer::PixelShader_DX12 testPS;
-    testVS.Init(SHADERPATHW "SimpleVS.cso");
-    testPS.Init(SHADERPATHW "SimplePS.cso");
     testPSO.SetRootSignature(Muon::GetRootSignature());
-    testPSO.SetVertexShader(testVS);
-    testPSO.SetPixelShader(testPS);
+    testPSO.SetVertexShader(*pVS);
+    testPSO.SetPixelShader(*pPS);
     success = testPSO.Generate();
-
 
     struct Vertex
     {
@@ -99,10 +104,11 @@ bool Game::InitDX12(HWND window, int width, int height)
         { { -0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
 
-    Muon::ResetCommandList();
-
-    testMesh.Init(triangleVertices, sizeof(triangleVertices), sizeof(Vertex), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
-
+    Muon::ResetCommandList(testPSO.GetPipelineState());
+    Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
+    stagingBuffer.Map();
+    testMesh.Init(triangleVertices, Muon::AlignToBoundary(sizeof(triangleVertices), 16), Muon::AlignToBoundary(sizeof(Vertex), 16), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
+    stagingBuffer.Unmap(0, stagingBuffer.GetBufferSize());
     Muon::CloseCommandList();
     Muon::ExecuteCommandList();
 
@@ -153,7 +159,7 @@ void Game::Render()
         return;
     }
 
-    Muon::ResetCommandList();
+    Muon::ResetCommandList(testPSO.GetPipelineState());
     Muon::PrepareForRender();
     testPSO.Bind();
     testMesh.Draw(Muon::GetCommandList());
@@ -161,7 +167,8 @@ void Game::Render()
     Muon::CloseCommandList();
     Muon::ExecuteCommandList();
     Muon::Present();
-    Muon::WaitForPreviousFrame();
+    Muon::FlushCommandQueue();
+    Muon::UpdateBackBufferIndex();
 
 #if USE_DX11
     auto context = mDeviceResources.GetContext();

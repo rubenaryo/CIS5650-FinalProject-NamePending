@@ -47,11 +47,16 @@ void PopulateInputElements(D3D12_INPUT_CLASSIFICATION slotClass,
     uint16_t totalByteSize = 0;
     for (uint8_t i = 0; i != numInputs; ++i)
     {
-        const D3D12_SIGNATURE_PARAMETER_DESC& paramDesc = paramDescs[i];
+        D3D12_SIGNATURE_PARAMETER_DESC& paramDesc = paramDescs[i];
 
         out_inputParams.push_back(D3D12_INPUT_ELEMENT_DESC());
         D3D12_INPUT_ELEMENT_DESC& inputParam = out_inputParams.back();
-        inputParam.SemanticName = paramDesc.SemanticName;
+        
+        size_t length = 1 +  strnlen_s(paramDesc.SemanticName, 256);
+        char* buf = new CHAR[length];
+        memset(buf, 0, length);
+        strncpy(buf, paramDesc.SemanticName, length);
+        inputParam.SemanticName = buf;
         inputParam.SemanticIndex = paramDesc.SemanticIndex;
         inputParam.InputSlotClass = slotClass;
 
@@ -106,7 +111,7 @@ void PopulateInputElements(D3D12_INPUT_CLASSIFICATION slotClass,
     out_byteSize = totalByteSize;
 }
 
-bool BuildInputLayout(ID3D12ShaderReflection* pReflection, ID3DBlob* pBlob, VertexShader_DX12* out_shader)
+bool BuildInputLayout(ID3D12ShaderReflection* pReflection, ID3DBlob* pBlob, VertexShader* out_shader)
 {
     if (!pReflection || !pBlob || !out_shader)
         return false;
@@ -159,7 +164,7 @@ bool BuildInputLayout(ID3D12ShaderReflection* pReflection, ID3DBlob* pBlob, Vert
 
     vbDesc.ByteOffsets = new uint16_t[numInputs];//(uint16_t*)malloc(sizeof(uint16_t) * numInputs);
     PopulateInputElements(D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, paramDescs, numInputs, out_shader->InputElements, vbDesc.ByteOffsets, vbDesc.ByteSize);
-    vbDesc.SemanticsArr = std::move(semanticsArr);
+    vbDesc.SemanticsArr = semanticsArr;
     vbDesc.AttrCount = numInputs;
     out_shader->VertexDesc = vbDesc;
     out_shader->Initialized = true;
@@ -167,18 +172,27 @@ bool BuildInputLayout(ID3D12ShaderReflection* pReflection, ID3DBlob* pBlob, Vert
     return true;
 }
 
-VertexShader_DX12::VertexShader_DX12(const wchar_t* path)
+VertexShader::VertexShader(const wchar_t* path)
 {
     Init(path);
 }
 
-VertexShader_DX12::~VertexShader_DX12()
+VertexShader::~VertexShader()
 {
     delete[] VertexDesc.SemanticsArr;
     delete[] VertexDesc.ByteOffsets;
+
+    for (D3D12_INPUT_ELEMENT_DESC& param : InputElements)
+    {
+        if (param.SemanticName)
+        {
+            delete[] param.SemanticName;
+            param.SemanticName = nullptr;
+        }
+    }
 }
 
-bool VertexShader_DX12::Init(const wchar_t* path)
+bool VertexShader::Init(const wchar_t* path)
 {
     HRESULT hr = D3DReadFileToBlob(path, this->ShaderBlob.GetAddressOf());
     COM_EXCEPT(hr);
@@ -192,12 +206,12 @@ bool VertexShader_DX12::Init(const wchar_t* path)
     return SUCCEEDED(hr);
 }
 
-PixelShader_DX12::PixelShader_DX12(const wchar_t* path)
+PixelShader::PixelShader(const wchar_t* path)
 {
     Init(path);
 }
 
-bool PixelShader_DX12::Init(const wchar_t* path)
+bool PixelShader::Init(const wchar_t* path)
 {
     HRESULT hr = D3DReadFileToBlob(path, this->ShaderBlob.GetAddressOf());
     COM_EXCEPT(hr);

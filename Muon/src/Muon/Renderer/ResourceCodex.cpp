@@ -45,9 +45,9 @@ void ResourceCodex::Init()
 {
     ResourceCodex& codexInstance = GetSingleton();
     codexInstance.mMeshStagingBuffer.Create(L"Mesh Staging Buffer", 64 * 1024 * 1024);
+    ShaderFactory::LoadAllShaders(codexInstance);
 
     //TextureFactory::LoadAllTextures(device, context, codexInstance);
-    //ShaderFactory::LoadAllShaders(device, codexInstance);
     //MaterialFactory::CreateAllMaterials(device, codexInstance);
 }
 
@@ -73,20 +73,20 @@ void ResourceCodex::Destroy()
     for (auto const& s : codexInstance.mVertexShaders)
     {
         const VertexShader& vs = s.second;
-        vs.InputLayout->Release();
-        free(vs.VertexDesc.SemanticsArr);
-        free(vs.VertexDesc.ByteOffsets);
-        vs.Shader->Release();
+        //vs.InputLayout->Release();
+        //free(vs.VertexDesc.SemanticsArr);
+        //free(vs.VertexDesc.ByteOffsets);
+        //vs.Shader->Release();
     }
 
-    std::unordered_map<ShaderID, const PixelShader>::iterator it = codexInstance.mPixelShaders.begin();
-
-    while (it != codexInstance.mPixelShaders.end())
-    {
-        if(it->second.SamplerState) it->second.SamplerState->Release();
-        if(it->second.Shader) it->second.Shader->Release();
-        ++it;
-    }
+    //std::unordered_map<ShaderID, const PixelShader>::iterator it = codexInstance.mPixelShaders.begin();
+    //
+    //while (it != codexInstance.mPixelShaders.end())
+    //{
+    //    //if(it->second.SamplerState) it->second.SamplerState->Release();
+    //    //if(it->second.Shader) it->second.Shader->Release();
+    //    ++it;
+    //}
 
     for (auto const& t : codexInstance.mTextureMap)
         for(ID3D11ShaderResourceView* srv : t.second.SRVs)
@@ -133,20 +133,14 @@ const PixelShader* ResourceCodex::GetPixelShader(ShaderID UID) const
         return nullptr;
 }
 
-void ResourceCodex::AddVertexShader(ShaderID hash, const wchar_t* path, ID3D11Device* pDevice)
-{
-    VertexShader shader;
-    ShaderFactory::CreateVertexShader(path, &shader, pDevice);
-    const VertexShader cShader = shader;
-    mVertexShaders.insert(std::pair<ShaderID, const VertexShader>(hash, cShader));
+void ResourceCodex::AddVertexShader(ShaderID hash, const wchar_t* path)
+{   
+    mVertexShaders.emplace(hash, path);
 }
 
-void ResourceCodex::AddPixelShader(ShaderID hash, const wchar_t* path, ID3D11Device* pDevice)
+void ResourceCodex::AddPixelShader(ShaderID hash, const wchar_t* path)
 {   
-    PixelShader shader;
-    ShaderFactory::CreatePixelShader(path, &shader, pDevice);
-    const PixelShader cShader = shader;
-    mPixelShaders.insert(std::pair<ShaderID, const PixelShader>(hash, cShader));
+    mPixelShaders.emplace(hash, path);
 }
 
 void ResourceCodex::InsertTexture(TextureID UID, UINT slot, ID3D11ShaderResourceView* pSRV)

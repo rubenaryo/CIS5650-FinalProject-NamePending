@@ -23,13 +23,14 @@ namespace Muon
 	ID3D12Fence* GetFence();
 	ID3D12RootSignature* GetRootSignature();
 
-	bool ResetCommandList();
+	bool ResetCommandList(ID3D12PipelineState* pInitialPipelineState);
 	bool CloseCommandList();
 	bool PrepareForRender();
 	bool FinalizeRender();
 	bool ExecuteCommandList();
 	bool Present();
-	bool WaitForPreviousFrame();
+	bool FlushCommandQueue();
+	bool UpdateBackBufferIndex();
 
 	bool Initialize(HWND hwnd, int width, int height);
 }

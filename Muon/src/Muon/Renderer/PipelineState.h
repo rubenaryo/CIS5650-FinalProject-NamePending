@@ -10,8 +10,8 @@ Description : Interface for Pipeline state objects (PSO)
 
 namespace Renderer
 {
-	struct VertexShader_DX12;
-	struct PixelShader_DX12;
+	struct VertexShader;
+	struct PixelShader;
 }
 
 namespace Muon
@@ -38,8 +38,8 @@ public:
 
 public:
 	virtual void SetRootSignature(ID3D12RootSignature* pRootSig) override;
-	void SetVertexShader(Renderer::VertexShader_DX12& vs);
-	void SetPixelShader(Renderer::PixelShader_DX12& ps);
+	void SetVertexShader(const Renderer::VertexShader& vs);
+	void SetPixelShader(const Renderer::PixelShader& ps);
 
 	// Generates the mpPipelineState from the parameters held in the description
 	bool Generate();

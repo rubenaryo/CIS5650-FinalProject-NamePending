@@ -42,13 +42,13 @@ void GraphicsPipelineState::SetRootSignature(ID3D12RootSignature* pRootSig)
     mDesc.pRootSignature = pRootSig;
 }
 
-void GraphicsPipelineState::SetVertexShader(Renderer::VertexShader_DX12& vs)
+void GraphicsPipelineState::SetVertexShader(const Renderer::VertexShader& vs)
 {
     mDesc.InputLayout = { vs.InputElements.data(), (unsigned int) vs.InputElements.size()};
     mDesc.VS = CD3DX12_SHADER_BYTECODE(vs.ShaderBlob.Get());
 }
 
-void GraphicsPipelineState::SetPixelShader(Renderer::PixelShader_DX12& ps)
+void GraphicsPipelineState::SetPixelShader(const Renderer::PixelShader& ps)
 {
     mDesc.PS = CD3DX12_SHADER_BYTECODE(ps.ShaderBlob.Get());
 }

@@ -62,12 +62,12 @@ void SkyRenderer::Draw(ID3D11DeviceContext* context)
     context->IASetIndexBuffer(mesh.IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
     // Set Vertex Shader and Input
-    context->IASetInputLayout(SkyMaterialCopy.VS->InputLayout);
-    context->VSSetShader(SkyMaterialCopy.VS->Shader, 0, 0);
-
-    // Set Pixel Shader and Bind Textures
-    context->PSSetShaderResources(0, (UINT)TextureSlots::COUNT, SkyMaterialCopy.Resources->SRVs);
-    context->PSSetShader(SkyMaterialCopy.PS->Shader, 0, 0);
+    //context->IASetInputLayout(SkyMaterialCopy.VS->InputLayout);
+    //context->VSSetShader(SkyMaterialCopy.VS->Shader, 0, 0);
+    //
+    //// Set Pixel Shader and Bind Textures
+    //context->PSSetShaderResources(0, (UINT)TextureSlots::COUNT, SkyMaterialCopy.Resources->SRVs);
+    //context->PSSetShader(SkyMaterialCopy.PS->Shader, 0, 0);
 
     // Submit Draw Call
     context->DrawIndexed(mesh.IndexCount, 0, 0);

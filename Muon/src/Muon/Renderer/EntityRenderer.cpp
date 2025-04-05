@@ -69,7 +69,7 @@ void EntityRenderer::InitMeshes(DeviceResources const& dr)
     const MeshID sphereID = ResourceCodex::AddMeshFromFile("sphere.obj", phongVertDesc, device);
     const MeshID cubeID = ResourceCodex::AddMeshFromFile("cube.obj", phongVertDesc, device);
     
-    dr.GetContext()->PSSetSamplers(0, 1, &PhongPS->SamplerState);
+    //dr.GetContext()->PSSetSamplers(0, 1, &PhongPS->SamplerState);
 }
 
 void EntityRenderer::InitEntities()
@@ -205,9 +205,9 @@ void EntityRenderer::InstancedDraw(ID3D11DeviceContext* context)
             context->RSSetState(pRasterStateOverride);
         }
 
-        context->IASetInputLayout(VS->InputLayout);
-        context->VSSetShader(VS->Shader, nullptr, 0);
-        context->PSSetShader(PS->Shader, nullptr, 0);
+        //context->IASetInputLayout(VS->InputLayout);
+        //context->VSSetShader(VS->Shader, nullptr, 0);
+        //context->PSSetShader(PS->Shader, nullptr, 0);
 
         // Update Material Param Data:
         ConstantBufferUpdateManager::MapUnmap(&MaterialParamsCB, (void*)&mat.Description, context);
