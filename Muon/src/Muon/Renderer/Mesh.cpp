@@ -9,6 +9,7 @@ Description : Mesh initialization logic, for DX12
 #include <Muon/Renderer/ThrowMacros.h>
 #include <Muon/Renderer/ResourceCodex.h>
 #include <Muon/Utils/Utils.h>
+#include <d3dx12.h>
 
 namespace Renderer
 {
@@ -24,7 +25,7 @@ bool CreateBuffer(void* bufferData, UINT bufferDataSize, ID3D12Resource*& out_bu
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &CD3DX12_RESOURCE_DESC::Buffer(bufferDataSize),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
+        D3D12_RESOURCE_STATE_COMMON,
         nullptr,
         IID_PPV_ARGS(&out_buffer)
     );
@@ -44,6 +45,8 @@ Mesh_DX12::~Mesh_DX12()
 
 bool Mesh_DX12::Init(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount, DXGI_FORMAT indexFormat)
 {
+    vertexDataSize = Muon::AlignToBoundary(vertexDataSize, 16);
+
     if (!vertexData || !CreateBuffer(vertexData, vertexDataSize, this->VertexBuffer))
     {
         Muon::Print("Error: Initialized mesh without vertices.\n");
@@ -112,8 +115,19 @@ bool Mesh_DX12::PopulateBuffers(void* vertexData, UINT vertexDataSize, UINT vert
     // Copy the vertex data into the upload buffer
     memcpy(vboMappedPtr, vertexData, vertexDataSize);
 
+    D3D12_SUBRESOURCE_DATA subResourceData = {};
+    subResourceData.pData = vertexData;
+    subResourceData.RowPitch = vertexDataSize;
+    subResourceData.SlicePitch = subResourceData.RowPitch;
+
     // Schedule a copy from the staging buffer to the real vertex buffer
-    pCommandList->CopyBufferRegion(VertexBuffer, 0, stagingBuffer.GetResource(), vboOffset, vertexDataSize);
+    pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(
+        VertexBuffer,
+        D3D12_RESOURCE_STATE_COMMON,
+        D3D12_RESOURCE_STATE_COPY_DEST
+    ));
+    //pCommandList->CopyBufferRegion(VertexBuffer, 0, stagingBuffer.GetResource(), vboOffset, vertexDataSize);
+    UpdateSubresources(pCommandList, VertexBuffer, stagingBuffer.GetResource(), 0, 0, 1, &subResourceData);
 
     if (bDoIndexBuffer)
     {

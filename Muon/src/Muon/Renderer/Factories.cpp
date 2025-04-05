@@ -216,8 +216,7 @@ void ShaderFactory::LoadAllShaders(ResourceCodex& codex)
         // Parse file name to decide how to create this resource
         if (name.find(L"VS") != std::wstring::npos)
         {
-            if (name.find(L"SimpleVS") != std::wstring::npos)
-                codex.AddVertexShader(hash, path.c_str());
+            codex.AddVertexShader(hash, path.c_str());
         }
         else if (name.find(L"PS") != std::wstring::npos)
         {

@@ -92,26 +92,25 @@ bool Game::InitDX12(HWND window, int width, int height)
 
     struct Vertex
     {
-        float Pos[3];
+        float Pos[4];
         float Col[4];
     };
 
     float aspectRatio = width / (float)height;
     Vertex triangleVertices[] =
     {
-        { { 0.0f, 0.25f * aspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-        { { 0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-        { { -0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
+        { { 0.0f, 0.25f * aspectRatio, 0.0f, 1.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
+        { { 0.25f, -0.25f * aspectRatio, 0.0f, 1.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
+        { { -0.25f, -0.25f * aspectRatio, 0.0f, 1.0f}, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
 
     Muon::ResetCommandList(testPSO.GetPipelineState());
     Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
     stagingBuffer.Map();
-    testMesh.Init(triangleVertices, Muon::AlignToBoundary(sizeof(triangleVertices), 16), Muon::AlignToBoundary(sizeof(Vertex), 16), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
+    testMesh.Init(triangleVertices, sizeof(triangleVertices), sizeof(Vertex), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
     stagingBuffer.Unmap(0, stagingBuffer.GetBufferSize());
     Muon::CloseCommandList();
     Muon::ExecuteCommandList();
-
     return success;
 }
 
