@@ -61,8 +61,6 @@ namespace Muon
 
     // TODO: Move these to the main application and generalize them. 
     ID3D12RootSignature* gRootSig = nullptr;
-    ID3D12Resource* gVertexBuffer = nullptr;
-    D3D12_VERTEX_BUFFER_VIEW gVertexBufferView;
 
     /////////////////////////////////////////////////////////////////////
     // Accessors
@@ -501,48 +499,6 @@ namespace Muon
         return SUCCEEDED(hr);
     }
     
-    bool CreateVertexBuffer(ID3D12Device* pDevice, float aspectRatio, D3D12_VERTEX_BUFFER_VIEW* out_vboView, ID3D12Resource** out_vbo)
-    {
-        struct Vertex
-        {
-            float Pos[3];
-            float Col[4];
-        };
-
-        Vertex triangleVertices[] =
-        {
-            { { 0.0f, 0.25f * aspectRatio, 0.0f }, { 1.0f, 0.0f, 0.0f, 1.0f } },
-            { { 0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 1.0f, 0.0f, 1.0f } },
-            { { -0.25f, -0.25f * aspectRatio, 0.0f }, { 0.0f, 0.0f, 1.0f, 1.0f } }
-        };
-
-        const UINT vertexBufferSize = sizeof(triangleVertices);
-        HRESULT hr = pDevice->CreateCommittedResource(
-            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-            D3D12_HEAP_FLAG_NONE,
-            &CD3DX12_RESOURCE_DESC::Buffer(vertexBufferSize),
-            D3D12_RESOURCE_STATE_GENERIC_READ,
-            nullptr,
-            IID_PPV_ARGS(out_vbo)
-        );
-        COM_EXCEPT(hr);
-
-        // Copy data into newly created GPU buffer
-        UINT8* pDataBegin;
-        CD3DX12_RANGE readRange(0, 0);        // We do not intend to read from this resource on the CPU.
-        hr = (*out_vbo)->Map(0, &readRange, reinterpret_cast<void**>(&pDataBegin));
-        memcpy(pDataBegin, triangleVertices, sizeof(triangleVertices));
-        (*out_vbo)->Unmap(0, nullptr);
-        COM_EXCEPT(hr);
-
-        // Create a vertex buffer view
-        out_vboView->BufferLocation = gVertexBuffer->GetGPUVirtualAddress();
-        out_vboView->StrideInBytes = sizeof(Vertex);
-        out_vboView->SizeInBytes = vertexBufferSize;
-
-        return SUCCEEDED(hr);
-    }
-    
     /////////////////////////////////////////////////////////////////////
 
     bool ResetCommandList(ID3D12PipelineState* pInitialPipelineState)
@@ -718,12 +674,6 @@ namespace Muon
         // TODO: Move this to the application and generalize it.
         success &= CreateRootSig(GetDevice(), &gRootSig);
         CHECK_SUCCESS(success, "Error: Failed to create root signature.\n");
-
-        //success &= LoadShaders(GetDevice(), GetCommandList(), gRootSig, &gPipelineState);
-        //CHECK_SUCCESS(success, "Error: Failed to load shaders.\n");
-
-        //success &= CreateVertexBuffer(GetDevice(), (float)width / (float)height, &gVertexBufferView, &gVertexBuffer);
-        //CHECK_SUCCESS(success, "Error: Failed create vertex buffer.\n");
 
         // We've written a bunch of commands, close the list and execute it.
         hr = GetCommandList()->Close();
