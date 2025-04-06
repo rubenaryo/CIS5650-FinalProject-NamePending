@@ -26,7 +26,7 @@ struct TextureFactory final
 struct MeshFactory final
 {
     static MeshID CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, Mesh& out_meshDX12);
-    static void LoadAllMeshes();
+    static void LoadAllMeshes(ResourceCodex& codex);
 };
 
 struct MaterialFactory final

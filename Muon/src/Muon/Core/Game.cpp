@@ -10,6 +10,7 @@ Description : Implementation of Game.h
 
 #include <Muon/Renderer/Camera.h>
 #include <Muon/Renderer/COMException.h>
+#include <Muon/Renderer/Factories.h>
 #include <Muon/Renderer/LightingManager.h>
 #include <Muon/Renderer/PipelineState.h>
 #include <Muon/Renderer/ResourceCodex.h>
@@ -107,6 +108,7 @@ bool Game::InitDX12(HWND window, int width, int height)
     Muon::ResetCommandList(testPSO.GetPipelineState());
     Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
     stagingBuffer.Map();
+    Renderer::MeshFactory::LoadAllMeshes(codex);
     testMesh.Init(triangleVertices, sizeof(triangleVertices), sizeof(Vertex), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
     stagingBuffer.Unmap(0, stagingBuffer.GetBufferSize());
     Muon::CloseCommandList();

@@ -18,7 +18,7 @@ Description : Master Resource Distributor
 namespace Renderer {
 
 
-MeshID ResourceCodex::AddMeshFromFile(const char* fileName, const VertexBufferDescription* vertAttr, ID3D11Device* pDevice)
+MeshID ResourceCodex::AddMeshFromFile(const char* fileName, const VertexBufferDescription* vertAttr)
 {
     ResourceCodex& codexInstance = GetSingleton();
 
@@ -29,7 +29,7 @@ MeshID ResourceCodex::AddMeshFromFile(const char* fileName, const VertexBufferDe
     
     if (hashtable.find(id) == hashtable.end())
     {
-        codexInstance.mMeshMap.insert(std::pair<MeshID, Mesh>(id, mesh));
+        codexInstance.mMeshMap.emplace(id, mesh);
     }
     else
     {
@@ -55,10 +55,10 @@ void ResourceCodex::Destroy()
 {
     ResourceCodex& codexInstance = GetSingleton();
 
-    for (auto const& m : codexInstance.mMeshMap)
+    for (auto& m : codexInstance.mMeshMap)
     {
-        m.second.VertexBuffer->Release();
-        m.second.IndexBuffer->Release();
+        Mesh& mesh = m.second;
+        mesh.Release();
     }
 
     for (auto const& m : codexInstance.mMaterials)
@@ -70,24 +70,19 @@ void ResourceCodex::Destroy()
             m.DepthStencilStateOverride->Release();
     }
 
-    for (auto const& s : codexInstance.mVertexShaders)
+    for (auto& s : codexInstance.mVertexShaders)
     {
-        const VertexShader& vs = s.second;
-        //vs.InputLayout->Release();
-        //free(vs.VertexDesc.SemanticsArr);
-        //free(vs.VertexDesc.ByteOffsets);
-        //vs.Shader->Release();
+        VertexShader& vs = s.second;
+        vs.Release();
     }
 
-    //std::unordered_map<ShaderID, const PixelShader>::iterator it = codexInstance.mPixelShaders.begin();
-    //
-    //while (it != codexInstance.mPixelShaders.end())
-    //{
-    //    //if(it->second.SamplerState) it->second.SamplerState->Release();
-    //    //if(it->second.Shader) it->second.Shader->Release();
-    //    ++it;
-    //}
+    for (auto& s : codexInstance.mPixelShaders)
+    {
+        PixelShader& ps = s.second;
+        ps.Release();
+    }
 
+    // TODO: DX12-ify this.
     for (auto const& t : codexInstance.mTextureMap)
         for(ID3D11ShaderResourceView* srv : t.second.SRVs)
             if(srv) srv->Release();

@@ -66,8 +66,8 @@ void EntityRenderer::InitMeshes(DeviceResources const& dr)
     const PixelShader*  PhongPS = sg_Codex.GetPixelShader(kPhongPSID);
 
     const VertexBufferDescription* phongVertDesc = &instancedPhongVS->VertexDesc;
-    const MeshID sphereID = ResourceCodex::AddMeshFromFile("sphere.obj", phongVertDesc, device);
-    const MeshID cubeID = ResourceCodex::AddMeshFromFile("cube.obj", phongVertDesc, device);
+    const MeshID sphereID = ResourceCodex::AddMeshFromFile("sphere.obj", phongVertDesc);
+    const MeshID cubeID = ResourceCodex::AddMeshFromFile("cube.obj", phongVertDesc);
     
     //dr.GetContext()->PSSetSamplers(0, 1, &PhongPS->SamplerState);
 }

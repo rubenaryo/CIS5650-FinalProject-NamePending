@@ -44,9 +44,9 @@ struct VertexShader
 {
     VertexShader() = default;
     VertexShader(const wchar_t* path);
-    ~VertexShader();
 
     bool Init(const wchar_t* path);
+    bool Release();
 
     std::vector<D3D12_INPUT_ELEMENT_DESC> InputElements;
     Microsoft::WRL::ComPtr<ID3DBlob> ShaderBlob;
@@ -62,6 +62,7 @@ struct PixelShader
     PixelShader(const wchar_t* path);
     
     bool Init(const wchar_t* path);
+    bool Release();
 
     Microsoft::WRL::ComPtr<ID3DBlob> ShaderBlob;
     BOOL Initialized = false;

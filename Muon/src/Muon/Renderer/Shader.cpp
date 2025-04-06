@@ -1,11 +1,12 @@
-#include "Shader.h"
 /*----------------------------------------------
 Ruben Young (rubenaryo@gmail.com)
 Date : 2025/3
 Description : Implementations of Muon shader objects
 ----------------------------------------------*/
 
+#include <Muon/Renderer/Shader.h>
 #include <Muon/Renderer/ThrowMacros.h>
+#include <Muon/Utils/Utils.h>
 
 namespace Renderer
 {
@@ -167,7 +168,6 @@ bool BuildInputLayout(ID3D12ShaderReflection* pReflection, ID3DBlob* pBlob, Vert
     vbDesc.SemanticsArr = semanticsArr;
     vbDesc.AttrCount = numInputs;
     out_shader->VertexDesc = vbDesc;
-    out_shader->Initialized = true;
 
     return true;
 }
@@ -177,23 +177,14 @@ VertexShader::VertexShader(const wchar_t* path)
     Init(path);
 }
 
-VertexShader::~VertexShader()
-{
-    delete[] VertexDesc.SemanticsArr;
-    delete[] VertexDesc.ByteOffsets;
-
-    for (D3D12_INPUT_ELEMENT_DESC& param : InputElements)
-    {
-        if (param.SemanticName)
-        {
-            delete[] param.SemanticName;
-            param.SemanticName = nullptr;
-        }
-    }
-}
-
 bool VertexShader::Init(const wchar_t* path)
 {
+    if (Initialized)
+    {
+        Muon::Printf(L"Warning: Attempted to initialized [%s]. When it was already initialized!", path);
+        return false;
+    }
+
     HRESULT hr = D3DReadFileToBlob(path, this->ShaderBlob.GetAddressOf());
     COM_EXCEPT(hr);
 
@@ -202,8 +193,39 @@ bool VertexShader::Init(const wchar_t* path)
         IID_ID3D12ShaderReflection, (void**)pReflection.GetAddressOf());
     COM_EXCEPT(hr);
 
-    BuildInputLayout(pReflection.Get(), ShaderBlob.Get(), this);
+    Initialized = BuildInputLayout(pReflection.Get(), ShaderBlob.Get(), this);
     return SUCCEEDED(hr);
+}
+
+bool VertexShader::Release()
+{
+    bool released = false;
+
+    if (VertexDesc.SemanticsArr)
+    {
+        delete[] VertexDesc.SemanticsArr;
+        VertexDesc.SemanticsArr = nullptr;
+        released = true;
+    }
+
+    if (VertexDesc.ByteOffsets)
+    {
+        delete[] VertexDesc.ByteOffsets;
+        VertexDesc.ByteOffsets = nullptr;
+        released = true;
+    }
+
+    for (D3D12_INPUT_ELEMENT_DESC& param : InputElements)
+    {
+        if (param.SemanticName)
+        {
+            delete[] param.SemanticName;
+            param.SemanticName = nullptr;
+            released = true;
+        }
+    }
+
+    return released;
 }
 
 PixelShader::PixelShader(const wchar_t* path)
@@ -218,6 +240,12 @@ bool PixelShader::Init(const wchar_t* path)
 
     Initialized = true;
     return SUCCEEDED(hr);
+}
+
+bool PixelShader::Release()
+{
+    // This will get filled out once we're dealing with samplers and such
+    return true;
 }
 
 }

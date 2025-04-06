@@ -34,13 +34,24 @@ bool CreateBuffer(void* bufferData, UINT bufferDataSize, ID3D12Resource*& out_bu
     return out_buffer != nullptr;
 }
 
-Mesh::~Mesh()
+// Intentially not tied to the destructor. That way meshes can be copied around freely without being randomly released.
+// The ResourceCodex owns destroying meshes.
+bool Mesh::Release()
 {
-    // TODO: I think in DX12 we have to keep track of whether these are still in use by the GPU or not...
+    bool released = false;
     if (IndexBuffer)
+    {
         IndexBuffer->Release();
+        released = true;
+    }
+
     if (VertexBuffer)
+    {
         VertexBuffer->Release();
+        released = true;
+    }
+
+    return released;
 }
 
 bool Mesh::Init(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount, DXGI_FORMAT indexFormat)

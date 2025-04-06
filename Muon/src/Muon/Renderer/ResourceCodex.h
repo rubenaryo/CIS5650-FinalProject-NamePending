@@ -40,7 +40,7 @@ enum MaterialIndex
 class alignas(8) ResourceCodex
 {
 public:
-    static MeshID AddMeshFromFile(const char* fileName, const VertexBufferDescription* vertAttr, ID3D11Device* pDevice);
+    static MeshID AddMeshFromFile(const char* fileName, const VertexBufferDescription* vertAttr);
     
     // Singleton Stuff
     static void Init();

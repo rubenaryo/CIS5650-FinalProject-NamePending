@@ -70,7 +70,7 @@ namespace Muon
     /////////////////////////////////////////////////////////////////////
     // Accessors
 
-    ID3D12Device* GetDevice() { return gDevice; }
+    ID3D12Device* GetDevice() { return gDevice; } 
     ID3D12Fence* GetFence() { return gFence; }
     ID3D12RootSignature* GetRootSignature() { return gRootSig; }
     UINT GetRTVDescriptorSize() { return gRTVSize; }

@@ -22,7 +22,7 @@
 
 namespace Renderer {
 
-MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, Mesh& out_meshDX12)
+MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, Mesh& out_mesh)
 {
     Assimp::Importer Importer;
     MeshID meshId = fnv1a(fileName);
@@ -153,7 +153,7 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
 
             *out_mesh = tempMesh;
 #else
-            bool success = out_meshDX12.Init(reinterpret_cast<void*>(vertices), vertDesc.ByteSize * numVertices, vertDesc.ByteSize, reinterpret_cast<void*>(indices), sizeof(unsigned int) * numIndices, numIndices, DXGI_FORMAT_R32_UINT);
+            bool success = out_mesh.Init(reinterpret_cast<void*>(vertices), vertDesc.ByteSize * numVertices, vertDesc.ByteSize, reinterpret_cast<void*>(indices), sizeof(unsigned int) * numIndices, numIndices, DXGI_FORMAT_R32_UINT);
             if (!success)
                 Muon::Print("Failed to init mesh!\n");
 #endif
@@ -169,30 +169,51 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
         throw std::exception(buf);
         return 0;
     }
-    
-    const char vbDebug[] = "_VertexBuffer";
-    const char ibDebug[] = "_IndexBuffer";
-    char vbName[64];
-    char ibName[64];
-    ZeroMemory(vbName, 64);
-    ZeroMemory(ibName, 64);
-    strcat_s(vbName, fileName);
-    strcat_s(ibName, fileName);    
-    strcat_s(vbName, vbDebug);
-    strcat_s(ibName, ibDebug);
-    strcat_s(vbName, "\0");
-    strcat_s(ibName, "\0");
-    
-    //HRESULT hr = out_mesh->VertexBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(vbName), vbName);
-    //COM_EXCEPT(hr);
-    //hr = out_mesh->IndexBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, strlen(ibName), ibName);
-    //COM_EXCEPT(hr);
+
+    std::string vbName;
+    vbName.append(fileName);
+    vbName.append("_VertexBuffer");
+        
+    HRESULT hr = out_mesh.VertexBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)vbName.size(), vbName.c_str());
+    COM_EXCEPT(hr);
+
+    if (out_mesh.IndexBuffer)
+    {
+        std::string ibName;
+        ibName.append(fileName);
+        ibName.append("_IndexBuffer");
+
+        hr = out_mesh.IndexBuffer->SetPrivateData(WKPDID_D3DDebugObjectName, (UINT)ibName.size(), ibName.c_str());
+        COM_EXCEPT(hr);
+    }
     #endif
     return meshId;
 }
 
-void MeshFactory::LoadAllMeshes()
+void MeshFactory::LoadAllMeshes(ResourceCodex& codex)
 {
+    namespace fs = std::filesystem;
+    std::string modelPath = MODELPATH;
+
+#if defined(MN_DEBUG)
+    if (!fs::exists(modelPath))
+        throw std::exception("Models folder doesn't exist!");
+#endif
+
+    // PhongVS will be comprehensive enough for now..
+    const ShaderID kPhongVSID = fnv1a(L"PhongVS.cso");
+    const VertexShader* pVS = codex.GetVertexShader(kPhongVSID);
+    if (!pVS)
+        return;
+
+    const VertexBufferDescription* pVertDesc = &(pVS->VertexDesc);
+
+    // Iterate through folder and load models
+    for (const auto& entry : fs::directory_iterator(modelPath))
+    {
+        std::string& name = entry.path().filename().generic_string();
+        codex.AddMeshFromFile(name.c_str(), pVertDesc);
+    }
 }
 
 void ShaderFactory::LoadAllShaders(ResourceCodex& codex)
