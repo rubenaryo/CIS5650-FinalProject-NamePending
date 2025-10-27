@@ -36,7 +36,6 @@ DirectX::XMFLOAT4X4 Transform::Recompute()
     return mWorld;
 }
 
-
 void Transform::Translate(float x, float y, float z)
 {
     this->Translate(XMVectorSet(x, y, z, 0));
@@ -45,7 +44,6 @@ void Transform::Translate(XMVECTOR translation)
 {
     mPosition = XMVectorAdd(mPosition, translation);
 }
-
 
 void Transform::Rotate(float p, float y, float r)
 {
@@ -56,7 +54,6 @@ void Transform::Rotate(XMVECTOR quatRotation)
 {
     mQuatRotation = XMQuaternionMultiply(mQuatRotation, XMQuaternionRotationRollPitchYawFromVector(quatRotation));
 }
-
 
 void Transform::Scale(float x, float y, float z)
 {
@@ -78,7 +75,6 @@ void Transform::SetTranslation(DirectX::XMVECTOR translation)
     mPosition = translation;
 }
 
-
 void Transform::SetRotation(float pitch, float yaw, float roll)
 {
     this->SetRotation(XMQuaternionRotationRollPitchYaw(pitch, yaw, roll));
@@ -88,7 +84,6 @@ void Transform::SetRotation(DirectX::XMVECTOR quatRotation)
 {
     mQuatRotation = quatRotation;
 }
-
 
 void Transform::SetScale(float x, float y, float z)
 {

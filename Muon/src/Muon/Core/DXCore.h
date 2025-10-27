@@ -8,6 +8,7 @@ Description : Holds all the central DX12 Data structures
 
 #include <d3dx12.h>
 #include <d3d12.h>
+#include <d3dcompiler.h>
 
 #pragma comment(lib, "d3d12.lib")
 #pragma comment(lib, "dxgi.lib")

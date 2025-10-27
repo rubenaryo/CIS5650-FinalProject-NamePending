@@ -7,7 +7,6 @@ Description : Interface for Quaternion-Based Camera functionality
 #define CAMERA_H
 
 #include "CBufferStructs.h"
-#include "ConstantBuffer.h"
 #include "DXCore.h"
 #include <Muon/Core/UploadBuffer.h>
 
@@ -35,21 +34,15 @@ class Camera
 friend class Input::GameInput;
 
 public:
-    Camera(float x, float y, float z, float aspectRatio, float nearPlane, float farPlane, float sensitivity, ID3D11Device* device, ID3D11DeviceContext* context);
     Camera(DirectX::XMFLOAT3& pos, float aspectRatio, float near, float far);
     Camera() = delete;
     ~Camera();
 
 public:
     // Updates Camera's View Matrix
-    void UpdateView(ID3D11DeviceContext* context);
     void UpdateView(); // DX12
 
-    // Removes the translation from the view matrix, and then updates the view-projection constant buffer
-    void PrepareForSkyRender(ID3D11DeviceContext* context);
-
     // Updates Camera's Projection Matrix
-    void UpdateProjection(float aspectRatio, ID3D11DeviceContext* context);
     void UpdateProjection(float aspectRatio); // DX12
 
     DirectX::XMMATRIX   GetView()           const  { return mView;         }
@@ -81,9 +74,6 @@ private:
     // Look Sensitivity
     float mSensitivity;
 
-    // Bindable
-    ConstantBufferBindPacket mBindPacket;
-
     Muon::UploadBuffer mConstantBuffer;
 
     CameraMode mCameraMode;
@@ -95,7 +85,6 @@ private: // For GameInput only
     void MoveAlongAxis(float dist, DirectX::XMVECTOR axis); // Assumes normalized axis
     void Rotate(DirectX::XMVECTOR quatRotation);
     
-    void UpdateConstantBuffer(ID3D11DeviceContext* context); // DX11
     void UpdateConstantBuffer(); // DX12
 };
 }

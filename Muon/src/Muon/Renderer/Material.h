@@ -6,11 +6,12 @@ Description : Material class for shader information
 #ifndef MATERIAL_H
 #define MATERIAL_H
 
-#include "DXCore.h"
+#include <Muon/Core/DXCore.h>
 #include "CBufferStructs.h"
 
 #include <Muon/Renderer/PipelineState.h>
 #include <unordered_map>
+#include <string>
 
 namespace Renderer
 {
@@ -37,8 +38,7 @@ enum TextureSlotFlags : UINT
     TSF_NORMAL      = 1 << (UINT)TextureSlots::NORMAL,
     TSF_SPECULAR    = 1 << (UINT)TextureSlots::SPECULAR,
     TSF_ROUGHNESS   = 1 << (UINT)TextureSlots::ROUGHNESS,
-    TSF_CUBE        = 1 << (UINT)TextureSlots::CUBE,
-    TSF_ALL         = ~0    
+    TSF_CUBE        = 1 << (UINT)TextureSlots::CUBE, 
 };
 
 //struct ResourceBindChord
@@ -111,7 +111,7 @@ protected:
     const VertexShader* mpVS = nullptr;
     const PixelShader* mpPS = nullptr;
     std::vector<ParameterDesc> mParameters;
-    std::unordered_map<const char*, UINT> mParamNameToIndex;
+    std::unordered_map<const char*, size_t> mParamNameToIndex;
     Muon::GraphicsPipelineState mPipelineState;
     std::string mName;
     size_t mSize = 0;

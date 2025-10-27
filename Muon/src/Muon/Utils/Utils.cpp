@@ -6,6 +6,7 @@ Description : Utility functions
 
 #include <Muon.h>
 #include <Muon/Utils/Utils.h>
+#include <stdio.h>
 
 namespace Muon
 {

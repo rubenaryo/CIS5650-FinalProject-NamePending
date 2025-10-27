@@ -47,8 +47,8 @@ void ResourceCodex::Init()
     codexInstance.mMeshStagingBuffer.Create(L"Mesh Staging Buffer", 64 * 1024 * 1024);
     ShaderFactory::LoadAllShaders(codexInstance);
 
-    //TextureFactory::LoadAllTextures(device, context, codexInstance);
-    //MaterialFactory::CreateAllMaterials(device, codexInstance);
+    //TextureFactory::LoadAllTextures(codexInstance);
+    //MaterialFactory::CreateAllMaterials(codexInstance);
 }
 
 void ResourceCodex::Destroy()
@@ -60,15 +60,6 @@ void ResourceCodex::Destroy()
         Mesh& mesh = m.second;
         mesh.Release();
     }
-
-    //for (auto const& m : codexInstance.mMaterials)
-    //{
-    //    if (m.RasterStateOverride)
-    //        m.RasterStateOverride->Release();
-    //
-    //    if (m.DepthStencilStateOverride)
-    //        m.DepthStencilStateOverride->Release();
-    //}
 
     for (auto& s : codexInstance.mVertexShaders)
     {

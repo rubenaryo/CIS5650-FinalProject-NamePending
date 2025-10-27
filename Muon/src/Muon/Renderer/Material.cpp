@@ -46,7 +46,7 @@ void MaterialType::SetRootSignature(ID3D12RootSignature* pRootSig)
 // Added in-order, and it matters
 void MaterialType::AddParameter(const char* paramName, ParameterType type)
 {
-	UINT index = mParameters.size();
+	size_t index = mParameters.size();
 	ParameterDesc& desc = mParameters.emplace_back(paramName, type);
 	desc.Index = index;
 	mParamNameToIndex[paramName] = index; // maybe this will be too cumbersome later..
@@ -58,7 +58,7 @@ const ParameterDesc* MaterialType::GetParameter(const char* paramName) const
 	if (itFind == mParamNameToIndex.end() || itFind->second >= mParamNameToIndex.size())
 		return nullptr;
 
-	UINT index = itFind->second;
+	size_t index = itFind->second;
 	return &mParameters.at(index);
 }
 

@@ -8,6 +8,7 @@ Description : Definitions for OO-Window Creation
 
 #include <Muon.h>
 #include <Muon/Core/Game.h>
+#include <combaseapi.h>
 
 #include "WinApp.h"
 

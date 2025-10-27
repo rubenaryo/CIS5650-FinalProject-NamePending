@@ -6,10 +6,11 @@ Description : Transform class for game objects
 #ifndef TRANSFORM_H
 #define TRANSFORM_H
 
-#include <Muon/Renderer/DXCore.h>
+#include <Muon/Core/DXCore.h>
+#include <DirectXMath.h>
 
-namespace Core {
-
+namespace Core
+{
 struct Transform
 {
     explicit Transform();

@@ -19,6 +19,7 @@ bool PipelineState::Bind() const
         return false;
 
     pCommandList->SetPipelineState(this->GetPipelineState());
+    return true;
 }
 
 GraphicsPipelineState::GraphicsPipelineState()

@@ -8,7 +8,6 @@ Description : Declation of structs used as constant buffers by various shaders
 
 #include <DirectXMath.h>
 #include <DirectXColors.h>
-#include "LightStructs.h"
 
 namespace Renderer
 {
@@ -21,13 +20,6 @@ struct alignas(16) cbCamera
 struct alignas(16) cbPerEntity
 {
     DirectX::XMFLOAT4X4 world;
-};
-
-struct alignas(16) cbLighting
-{
-    DirectX::XMFLOAT3A ambientColor;
-    DirectionalLight   directionalLight;
-    DirectX::XMFLOAT3A cameraWorldPos;
 };
 
 struct alignas(16) cbMaterialParams

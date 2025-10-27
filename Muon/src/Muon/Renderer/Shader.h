@@ -11,6 +11,7 @@ Description : Wrapper for Vertex/Pixel/other shader code
 
 #include <vector>
 #include <wrl/client.h>
+#include <Muon/Core/DXCore.h>
 
 namespace Renderer {
 

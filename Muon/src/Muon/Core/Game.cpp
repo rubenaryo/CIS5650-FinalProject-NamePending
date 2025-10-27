@@ -11,7 +11,6 @@ Description : Implementation of Game.h
 #include <Muon/Renderer/Camera.h>
 #include <Muon/Renderer/COMException.h>
 #include <Muon/Renderer/Factories.h>
-#include <Muon/Renderer/LightingManager.h>
 #include <Muon/Renderer/PipelineState.h>
 #include <Muon/Renderer/ResourceCodex.h>
 #include <Muon/Renderer/Shader.h>
@@ -23,53 +22,13 @@ Description : Implementation of Game.h
 namespace Core
 {
 
-// Initialize device resources, and link up this game to be notified of device updates
 Game::Game() :
     mpInput(new Input::GameInput()),
-    mpCamera(nullptr),
-    mpLightingManager(nullptr)
+    mpCamera(nullptr)
 {
-    //mDeviceResources.RegisterDeviceNotify(this);
     mTimer.SetFixedTimeStep(false);
 }
 
-// Initialize device resource holder by creating all necessary resources
-//bool Game::Init(HWND window, int width, int height)
-//{
-//    using namespace Renderer;
-//
-//    // Grab Window handle, creates device and context
-//    mDeviceResources.SetWindow(window, width, height);
-//    mDeviceResources.CreateDeviceResources();
-//    CreateDeviceDependentResources();
-//    
-//    auto device = mDeviceResources.GetDevice();
-//    auto context = mDeviceResources.GetContext();
-//
-//    // Init all game resources
-//    ResourceCodex::Init();
-//    
-//    // Initialize game camera
-//    mpCamera = new Camera(-5.0f, 5.0f, -5.0f, width / (float)height, 0.1f, 100.0f, 1.5f, device, context);
-//
-//    // Create Devices dependent on window size
-//    mDeviceResources.CreateWindowSizeDependentResources();
-//    CreateWindowSizeDependentResources(width, height);
-//
-//    // Create Materials, Meshes, Entities
-//    //mEntityRenderer.Init(mDeviceResources);
-//    mSkyRenderer.Init(device);
-//
-//    // Create Lights and respective cbuffers
-//    DirectX::XMFLOAT3A camPos;
-//    mpCamera->GetPosition3A(&camPos);
-//    mpLightingManager = new LightingManager(mDeviceResources.GetDevice(), context, camPos);
-//
-//    return true;
-//}
-
-Renderer::Mesh testMesh;
-Muon::GraphicsPipelineState testPSO;
 bool Game::InitDX12(HWND window, int width, int height)
 {
     using namespace Renderer;
@@ -86,10 +45,10 @@ bool Game::InitDX12(HWND window, int width, int height)
     mpCamera = new Camera(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
 
     // Describe and create the graphics pipeline state object (PSO).
-    testPSO.SetRootSignature(Muon::GetRootSignature());
-    testPSO.SetVertexShader(*pVS);
-    testPSO.SetPixelShader(*pPS);
-    success = testPSO.Generate();
+    mPSO.SetRootSignature(Muon::GetRootSignature());
+    mPSO.SetVertexShader(*pVS);
+    mPSO.SetPixelShader(*pPS);
+    success = mPSO.Generate();
 
     struct Vertex
     {
@@ -105,11 +64,11 @@ bool Game::InitDX12(HWND window, int width, int height)
         { { -0.25f, -0.25f * aspectRatio, 0.0f, 1.0f}, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
 
-    Muon::ResetCommandList(testPSO.GetPipelineState());
+    Muon::ResetCommandList(mPSO.GetPipelineState());
     Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
     stagingBuffer.Map();
     Renderer::MeshFactory::LoadAllMeshes(codex);
-    testMesh.Init(triangleVertices, sizeof(triangleVertices), sizeof(Vertex), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
+    mTriangle.Init(triangleVertices, sizeof(triangleVertices), sizeof(Vertex), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
     stagingBuffer.Unmap(0, stagingBuffer.GetBufferSize());
     Muon::CloseCommandList();
     Muon::ExecuteCommandList();
@@ -134,22 +93,6 @@ void Game::Update(StepTimer const& timer)
     float elapsedTime = float(timer.GetElapsedSeconds());
     mpInput->Frame(elapsedTime, mpCamera);
     mpCamera->UpdateView();
-#if USE_DX11
-    // Update the input, passing in the camera so it will update its internal information
-
-    auto context = mDeviceResources.GetContext();
-
-    // Update the camera's view matrix
-
-
-    // Update the lights (if needed)
-    DirectX::XMFLOAT3A camPos;
-    mpCamera->GetPosition3A(&camPos);
-    mpLightingManager->Update(context, timer.GetTotalSeconds(), camPos);
-    
-    // Update the renderer's view matrices, lighting information.
-    mEntityRenderer.Update(context, elapsedTime);
-#endif
 }
 
 void Game::Render()
@@ -160,36 +103,16 @@ void Game::Render()
         return;
     }
 
-    Muon::ResetCommandList(testPSO.GetPipelineState());
+    Muon::ResetCommandList(mPSO.GetPipelineState());
     Muon::PrepareForRender();
-    testPSO.Bind();
-    testMesh.Draw(Muon::GetCommandList());
+    mPSO.Bind();
+    mTriangle.Draw(Muon::GetCommandList());
     Muon::FinalizeRender();
     Muon::CloseCommandList();
     Muon::ExecuteCommandList();
     Muon::Present();
     Muon::FlushCommandQueue();
     Muon::UpdateBackBufferIndex();
-
-#if USE_DX11
-    auto context = mDeviceResources.GetContext();
-
-    // Clear the necessary backbuffer
-    mDeviceResources.Clear(DirectX::Colors::Black);
-
-    // Draw all geometries
-    mEntityRenderer.Draw(context);
-
-    // Remove Translation component from VP matrix
-    mpCamera->PrepareForSkyRender(context);
-
-    // Draw the sky, binding the appropriate rasterizer/depth states
-    mSkyRenderer.Draw(context);
-
-    // Show the new frame
-    mDeviceResources.Present();
-
-#endif
 }
 
 void Game::CreateDeviceDependentResources()
@@ -198,23 +121,17 @@ void Game::CreateDeviceDependentResources()
 
 void Game::CreateWindowSizeDependentResources(int newWidth, int newHeight)
 {
-    //mDeviceResources.WindowSizeChanged(newWidth, newHeight);
-    //float aspectRatio = (float)newWidth / (float)newHeight;
-    //mpCamera->UpdateProjection(aspectRatio, mDeviceResources.GetContext());
+    float aspectRatio = (float)newWidth / (float)newHeight;
+    mpCamera->UpdateProjection(aspectRatio);
 }
 
 Game::~Game()
 {
-    delete mpLightingManager;
-    mpLightingManager = nullptr;
-    
     delete mpCamera;
     mpCamera = nullptr;
     
     delete mpInput;
-    mpInput = nullptr;
-
-    
+    mpInput = nullptr;   
 }
 
 #pragma region Game State Callbacks
@@ -246,16 +163,11 @@ void Game::OnResuming()
 // Recreates Window size dependent resources if needed
 void Game::OnMove()
 {
-    //auto r = mDeviceResources.GetOutputSize();
-    //mDeviceResources.WindowSizeChanged(r.right, r.bottom);
 }
 
 // Recreates Window size dependent resources if needed
 void Game::OnResize(int newWidth, int newHeight)
 {
-    //if (!mDeviceResources.WindowSizeChanged(newWidth, newHeight))
-    //    return;
-
     #if defined(MN_DEBUG)
         try
         {

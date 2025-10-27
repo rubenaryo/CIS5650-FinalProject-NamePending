@@ -116,48 +116,10 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
                 indices[ind++] = face.mIndices[2];
             }
             
-#if 0
-            Mesh tempMesh;
-
-            // Populate Mesh's DX objects
-            D3D11_BUFFER_DESC vbd;
-            vbd.Usage = D3D11_USAGE_IMMUTABLE;
-            vbd.ByteWidth = vertDesc.ByteSize * numVertices; // Number of vertices
-            vbd.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-            vbd.CPUAccessFlags = 0;
-            vbd.MiscFlags = 0;
-            vbd.StructureByteStride = 0;
-            D3D11_SUBRESOURCE_DATA initialVertexData;
-            initialVertexData.pSysMem = vertices;
-            HRESULT hr = pDevice->CreateBuffer(&vbd, &initialVertexData, &tempMesh.VertexBuffer);
-
-            #if defined(MN_DEBUG)
-                COM_EXCEPT(hr);
-            #endif
-
-            D3D11_BUFFER_DESC ibd;
-            ibd.Usage = D3D11_USAGE_IMMUTABLE;
-            ibd.ByteWidth = sizeof(unsigned int) * numIndices; // Number of vertices
-            ibd.BindFlags = D3D11_BIND_INDEX_BUFFER;
-            ibd.CPUAccessFlags = 0;
-            ibd.MiscFlags = 0;
-            ibd.StructureByteStride = 0;
-            D3D11_SUBRESOURCE_DATA initialIndexData;
-            initialIndexData.pSysMem = indices;
-            hr = pDevice->CreateBuffer(&ibd, &initialIndexData, &tempMesh.IndexBuffer);
-            tempMesh.IndexCount = numIndices;
-            tempMesh.Stride = vertAttr->ByteSize;
-
-            #if defined(MN_DEBUG)
-                COM_EXCEPT(hr);
-            #endif
-
-            *out_mesh = tempMesh;
-#else
             bool success = out_mesh.Init(reinterpret_cast<void*>(vertices), vertDesc.ByteSize * numVertices, vertDesc.ByteSize, reinterpret_cast<void*>(indices), sizeof(unsigned int) * numIndices, numIndices, DXGI_FORMAT_R32_UINT);
             if (!success)
                 Muon::Print("Failed to init mesh!\n");
-#endif
+
             free(vertices);
             free(indices);
         }
@@ -346,7 +308,7 @@ void ShaderFactory::LoadAllShaders(ResourceCodex& codex)
 //    }
 //}
 
-bool MaterialFactory::CreateAllMaterials(ID3D11Device* device, ResourceCodex& codex)
+bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
 {
     const uint32_t kLunarId = fnv1a(L"Lunar");       // FNV1A of L"Lunar"
 
@@ -399,69 +361,6 @@ bool MaterialFactory::CreateAllMaterials(ID3D11Device* device, ResourceCodex& co
     }
 
     return true;
-#if 0
-    {
-        Material lunarMaterial;
-        lunarMaterial.VS = codex.GetVertexShader(kInstancedPhongVSID);
-        lunarMaterial.PS = codex.GetPixelShader(kPhongPSNormalMapID);
-        lunarMaterial.Description.colorTint = DirectX::XMFLOAT4(DirectX::Colors::White);
-        lunarMaterial.Description.specularExp = 128.0f;
-        lunarMaterial.Resources = codex.GetTexture(kLunarId);
-
-        MaterialIndex lunarMaterialIndex = codex.PushMaterial(lunarMaterial);
-        assert(MI_LUNAR == lunarMaterialIndex); // This is stupid
-    }
-
-    {
-        Material skyMaterial;
-        skyMaterial.VS = codex.GetVertexShader(kSkyVSID);
-        skyMaterial.PS = codex.GetPixelShader(kSkyPSID);
-        skyMaterial.Resources = codex.GetTexture(kSpaceTextureID);
-
-        // Back-facing rasterizer state
-        D3D11_RASTERIZER_DESC rastDesc = {};
-        rastDesc.FillMode = D3D11_FILL_SOLID;
-        rastDesc.CullMode = D3D11_CULL_FRONT;
-        rastDesc.DepthClipEnable = true;
-        device->CreateRasterizerState(&rastDesc, &skyMaterial.RasterStateOverride);
-
-        // Depth stencil with "less equal"
-        D3D11_DEPTH_STENCIL_DESC dsDesc = {};
-        dsDesc.DepthEnable = true;
-        dsDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-        dsDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-        device->CreateDepthStencilState(&dsDesc, &skyMaterial.DepthStencilStateOverride);
-
-#if defined(MN_DEBUG)
-        const char RSdebugName[] = "Sky_RS";
-        const char DSdebugName[] = "Sky_DS";
-        HRESULT hr = skyMaterial.RasterStateOverride->SetPrivateData(WKPDID_D3DDebugObjectName, ARRAYSIZE(RSdebugName) - 1, RSdebugName);
-        hr = skyMaterial.DepthStencilStateOverride->SetPrivateData(WKPDID_D3DDebugObjectName, ARRAYSIZE(DSdebugName) - 1, DSdebugName);
-        COM_EXCEPT(hr);
-#endif
-
-        MaterialIndex skyMaterialIndex = codex.PushMaterial(skyMaterial);
-        assert(MI_SKY == skyMaterialIndex); // This is stupid    
-    }
-
-    {
-        Material wireframeMaterial;
-        wireframeMaterial.VS = codex.GetVertexShader(kInstancedPhongVSID);
-        wireframeMaterial.PS = codex.GetPixelShader(kWireFramePSID);
-        wireframeMaterial.Description.colorTint = DirectX::XMFLOAT4(DirectX::Colors::White);
-        wireframeMaterial.Description.specularExp = 0.0f;
-
-        // Wireframe no-cull raster state
-        D3D11_RASTERIZER_DESC rastDesc = {};
-        rastDesc.FillMode = D3D11_FILL_WIREFRAME;
-        rastDesc.CullMode = D3D11_CULL_NONE;
-        device->CreateRasterizerState(&rastDesc, &wireframeMaterial.RasterStateOverride);
-
-        MaterialIndex wireframeMaterialIndex = codex.PushMaterial(wireframeMaterial);
-        assert(MI_WIREFRAME == wireframeMaterialIndex); // This is stupid  
-    }
-    return true;
-#endif
 }
 
 }
