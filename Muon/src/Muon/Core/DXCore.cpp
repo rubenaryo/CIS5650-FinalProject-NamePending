@@ -17,6 +17,7 @@ or "Introduction to 3D Game Programming with DirectX 12" by Frank Luna
 #include <dxgidebug.h>
 #include <stdint.h>
 #include <wrl/client.h>
+#include <sstream>
 
 #define CHECK_SUCCESS(s, msg)       \
 do {                                \

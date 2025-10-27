@@ -127,7 +127,7 @@ namespace Core
         }
         return result;
 #else
-        return m_pGame->Init(hwnd, width, height);
+        return m_pGame->InitDX12(hwnd, width, height);
 #endif
     }
 
