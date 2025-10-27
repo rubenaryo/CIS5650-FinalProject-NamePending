@@ -1,6 +1,8 @@
+APP_NAME = "Application"
+
 workspace "Muon"
     architecture "x64"
-    startproject "IsoDungeon"
+    startproject (APP_NAME)
 
     configurations
     {
@@ -61,13 +63,13 @@ project "Muon"
 
         prebuildcommands
         {
-            ("{MKDIR} %{!wks.location}/_bin/" .. outputdir .. "/IsoDungeon")
+            ("{MKDIR} %{!wks.location}/_bin/" .. outputdir .. "/" .. APP_NAME)
         }
 
         postbuildcommands
         {
-            ("{COPYFILE} %{!cfg.buildtarget.abspath} %{!wks.location}_bin/".. outputdir .. "/IsoDungeon/%{prj.name}.dll"),
-            ("{COPYFILE} %{!wks.location}/external/assimp/Assimp64.dll %{!wks.location}_bin/".. outputdir .. "/IsoDungeon/Assimp64.dll")
+            ("{COPYFILE} %{!cfg.buildtarget.abspath} %{!wks.location}_bin/".. outputdir .. "/" .. APP_NAME .. "/%{prj.name}.dll"),
+            ("{COPYFILE} %{!wks.location}/external/assimp/Assimp64.dll %{!wks.location}_bin/".. outputdir .. "/" .. APP_NAME .. "/Assimp64.dll")
         }
 
     filter "configurations:Debug"
@@ -82,8 +84,8 @@ project "Muon"
         staticruntime "Off"
         shadermodel "5.0"
 
-project "IsoDungeon"
-    location "IsoDungeon"
+project (APP_NAME)
+    location (APP_NAME)
     kind "WindowedApp"
     language "C++"
 
