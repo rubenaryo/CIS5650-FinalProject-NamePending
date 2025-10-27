@@ -57,7 +57,7 @@ bool Game::Init(HWND window, int width, int height)
     CreateWindowSizeDependentResources(width, height);
 
     // Create Materials, Meshes, Entities
-    mEntityRenderer.Init(mDeviceResources);
+    //mEntityRenderer.Init(mDeviceResources);
     mSkyRenderer.Init(device);
 
     // Create Lights and respective cbuffers
@@ -198,9 +198,9 @@ void Game::CreateDeviceDependentResources()
 
 void Game::CreateWindowSizeDependentResources(int newWidth, int newHeight)
 {
-    mDeviceResources.WindowSizeChanged(newWidth, newHeight);
-    float aspectRatio = (float)newWidth / (float)newHeight;
-    mpCamera->UpdateProjection(aspectRatio, mDeviceResources.GetContext());
+    //mDeviceResources.WindowSizeChanged(newWidth, newHeight);
+    //float aspectRatio = (float)newWidth / (float)newHeight;
+    //mpCamera->UpdateProjection(aspectRatio, mDeviceResources.GetContext());
 }
 
 Game::~Game()

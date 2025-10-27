@@ -248,9 +248,9 @@ void Camera::UpdateConstantBuffer()
     cbCamera cb;
     XMStoreFloat4x4(&cb.viewProjection, XMMatrixMultiply(mView, mProjection));
 
-    //void* pMappedMemory = mConstantBuffer.Map();
-    //memcpy(pMappedMemory, &cb, mConstantBuffer.GetBufferSize());
-    //mConstantBuffer.Unmap(0, mConstantBuffer.GetBufferSize());
+    void* pMappedMemory = mConstantBuffer.Map();
+    memcpy(pMappedMemory, &cb, mConstantBuffer.GetBufferSize());
+    mConstantBuffer.Unmap(0, mConstantBuffer.GetBufferSize());
 }
 
 }

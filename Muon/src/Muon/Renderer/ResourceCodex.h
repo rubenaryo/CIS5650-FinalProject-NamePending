@@ -28,6 +28,7 @@ typedef uint32_t id_type;
 typedef id_type ShaderID;
 typedef id_type MeshID;
 typedef id_type TextureID;
+typedef id_type MaterialTypeID;
 
 enum MaterialIndex
 {
@@ -62,6 +63,7 @@ private:
     std::unordered_map<ShaderID, PixelShader>   mPixelShaders;
     std::unordered_map<MeshID, Mesh>            mMeshMap;
     std::unordered_map<TextureID, ResourceBindChord>   mTextureMap;
+    std::unordered_map<MaterialTypeID, MaterialType> mMaterialTypeMap;
 
     // Materials are queried by index rather than by ID since it's done at runtime 
     // TODO: Need to do this for meshes as well.
@@ -80,6 +82,7 @@ private:
     
     friend struct MaterialFactory;
     MaterialIndex PushMaterial(const Material& material);
+    MaterialType* InsertMaterialType(const char* name);
 
     friend struct ShaderFactory;
     void AddVertexShader(ShaderID hash, const wchar_t* path);

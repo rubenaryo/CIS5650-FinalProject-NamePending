@@ -17,6 +17,7 @@
 #include <DDSTextureLoader.h>
 #include <WICTextureLoader.h>
 
+#include <Muon/Core/DXCore.h>
 #include <Muon/Utils/Utils.h>
 #include <unordered_map>
 
@@ -349,6 +350,7 @@ bool MaterialFactory::CreateAllMaterials(ID3D11Device* device, ResourceCodex& co
 {
     const uint32_t kLunarId = fnv1a(L"Lunar");       // FNV1A of L"Lunar"
 
+    const ShaderID kPhongVSID = fnv1a("PhongVS.cso");
     const ShaderID kInstancedPhongVSID = 0xc8a366aa; // FNV1A of L"InstancedPhongVS.cso"
     const ShaderID kPhongPSID = 0x4dc6e249;          // FNV1A of L"PhongPS.cso"
     const ShaderID kPhongPSNormalMapID = fnv1a(L"Phong_NormalMapPS.cso");
@@ -359,6 +361,45 @@ bool MaterialFactory::CreateAllMaterials(ID3D11Device* device, ResourceCodex& co
     const TextureID kSpaceTextureID = 0xc1c43225; // fnv1a L"Space"
     const MeshID kSkyMeshID = 0x4a986f37; // cube
 
+    const VertexShader* pPhongVS = codex.GetVertexShader(kPhongVSID);
+    const PixelShader* pPhongPS = codex.GetPixelShader(kPhongPSNormalMapID);
+
+    if (!pPhongVS || !pPhongPS)
+    {
+        Muon::Print("Error: Failed to fetch Phong VS/PS from codex!");
+        return false;
+    }
+
+    // Test MaterialType
+    {
+        const char* PBRMaterialName = "StandardPBR";
+        MaterialType* pbr = codex.InsertMaterialType(PBRMaterialName);
+        if (!pbr)
+        {
+            Muon::Printf("Warning: %s MaterialType failed to be inserted into codex!", PBRMaterialName);
+            return false;
+        }
+
+        pbr->SetRootSignature(Muon::GetRootSignature());
+        pbr->SetVertexShader(*pPhongVS);
+        pbr->SetPixelShader(*pPhongPS);
+
+        // TODO: This should be done automatically upon adding the pixel shader
+        pbr->AddParameter("colorTint", ParameterType::Float4);
+        pbr->AddParameter("specularity", ParameterType::Float);
+        if (!pbr->Generate())
+        {
+            Muon::Printf("Warning: %s MaterialType failed to Generate()!", pbr->GetName().c_str());
+        }
+    }
+
+    // Test MaterialInstance
+    {
+
+    }
+
+    return true;
+#if 0
     {
         Material lunarMaterial;
         lunarMaterial.VS = codex.GetVertexShader(kInstancedPhongVSID);
@@ -419,8 +460,8 @@ bool MaterialFactory::CreateAllMaterials(ID3D11Device* device, ResourceCodex& co
         MaterialIndex wireframeMaterialIndex = codex.PushMaterial(wireframeMaterial);
         assert(MI_WIREFRAME == wireframeMaterialIndex); // This is stupid  
     }
-
     return true;
+#endif
 }
 
 }

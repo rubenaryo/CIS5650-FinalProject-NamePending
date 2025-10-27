@@ -30,32 +30,26 @@ namespace Renderer {
 EntityRenderer::EntityRenderer()
 {}
 
-void EntityRenderer::Init(DeviceResources const& dr)
+void EntityRenderer::Init()
 {
-    // Grab reference to d3d11 device and context
-    auto device = dr.GetDevice();
-    auto context = dr.GetContext();
-
     // Initialize meshes, materials, entities
-    InitMeshes(dr);
+    //InitMeshes(dr);
     InitEntities();
-    InitDrawContexts(device);
+    InitDrawContexts();
     
     // For now, assume we're only using trianglelist
-    context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    //context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
-    ConstantBufferUpdateManager::Populate(sizeof(cbMaterialParams), (UINT)PS_REGISTERS::MATERIAL, EASEL_SHADER_STAGE::ESS_PS, device, &MaterialParamsCB);
-    ConstantBufferUpdateManager::Bind(&MaterialParamsCB, context);
-
-    ConstantBufferUpdateManager::Populate(sizeof(cbPerEntity), (UINT)VS_REGISTERS::WORLD, EASEL_SHADER_STAGE::ESS_VS, device, &EntityCB);
-    ConstantBufferUpdateManager::Bind(&EntityCB, context);
+    //ConstantBufferUpdateManager::Populate(sizeof(cbMaterialParams), (UINT)PS_REGISTERS::MATERIAL, EASEL_SHADER_STAGE::ESS_PS, device, &MaterialParamsCB);
+    //ConstantBufferUpdateManager::Bind(&MaterialParamsCB, context);
+    //
+    //ConstantBufferUpdateManager::Populate(sizeof(cbPerEntity), (UINT)VS_REGISTERS::WORLD, EASEL_SHADER_STAGE::ESS_VS, device, &EntityCB);
+    //ConstantBufferUpdateManager::Bind(&EntityCB, context);
 }
 
 //TODO: Lots of hardcoded hashes here huh
-void EntityRenderer::InitMeshes(DeviceResources const& dr)
+void EntityRenderer::InitMeshes()
 {
-    auto device = dr.GetDevice();
-
     ResourceCodex const& sg_Codex = ResourceCodex::GetSingleton();
 
     const ShaderID kInstancedPhongVSID = 0xc8a366aa; // FNV1A of L"InstancedPhongVS.cso"
@@ -101,7 +95,7 @@ void EntityRenderer::InitEntities()
     }
 }
 
-void EntityRenderer::InitDrawContexts(ID3D11Device* device)
+void EntityRenderer::InitDrawContexts()
 {
     const UINT kInstancingPassCount = 1;
 
@@ -120,18 +114,20 @@ void EntityRenderer::InitDrawContexts(ID3D11Device* device)
         cubeDraw.MaterialIndex = MI_WIREFRAME;
     }
 
+    
+
     // Create the dynamic vertex buffer
-    D3D11_BUFFER_DESC dynamicDesc = {0};
-    dynamicDesc.Usage = D3D11_USAGE_DYNAMIC;
-    dynamicDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-    dynamicDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-    dynamicDesc.MiscFlags = 0;
-    dynamicDesc.StructureByteStride = 0;
-    dynamicDesc.ByteWidth = sizeof(DirectX::XMFLOAT4X4) * cubeDraw.InstanceCount;
-    COM_EXCEPT(device->CreateBuffer(&dynamicDesc, nullptr, &cubeDraw.DynamicBuffer));
+    //D3D11_BUFFER_DESC dynamicDesc = {0};
+    //dynamicDesc.Usage = D3D11_USAGE_DYNAMIC;
+    //dynamicDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+    //dynamicDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+    //dynamicDesc.MiscFlags = 0;
+    //dynamicDesc.StructureByteStride = 0;
+    //dynamicDesc.ByteWidth = sizeof(DirectX::XMFLOAT4X4) * cubeDraw.InstanceCount;
+    //COM_EXCEPT(device->CreateBuffer(&dynamicDesc, nullptr, &cubeDraw.DynamicBuffer));
 }
 
-void EntityRenderer::Update(ID3D11DeviceContext* context, float dt)
+void EntityRenderer::Update(float dt)
 {
     using namespace DirectX;
     using Core::Transform;
@@ -150,18 +146,18 @@ void EntityRenderer::Update(ID3D11DeviceContext* context, float dt)
     }
 
     // Rewrite the dynamic vertex buffer
-    D3D11_MAPPED_SUBRESOURCE mappedBuffer;
-    COM_EXCEPT(context->Map(lunarDraw.DynamicBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer));
-    memcpy(mappedBuffer.pData, lunarDraw.WorldMatrices, sizeof(DirectX::XMFLOAT4X4) * InstancingPasses[0].InstanceCount);
-    context->Unmap(lunarDraw.DynamicBuffer, 0);
+    //D3D11_MAPPED_SUBRESOURCE mappedBuffer;
+    ////COM_EXCEPT(context->Map(lunarDraw.DynamicBuffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &mappedBuffer));
+    //memcpy(mappedBuffer.pData, lunarDraw.WorldMatrices, sizeof(DirectX::XMFLOAT4X4) * InstancingPasses[0].InstanceCount);
+    //context->Unmap(lunarDraw.DynamicBuffer, 0);
 }
 
-void EntityRenderer::Draw(ID3D11DeviceContext* context)
+void EntityRenderer::Draw()
 {
-    this->InstancedDraw(context);
+    //this->InstancedDraw(context);
 }
 
-void EntityRenderer::InstancedDraw(ID3D11DeviceContext* context)
+void EntityRenderer::InstancedDraw()
 {
     ResourceCodex const& sg_Codex = ResourceCodex::GetSingleton();
 
@@ -201,8 +197,8 @@ void EntityRenderer::InstancedDraw(ID3D11DeviceContext* context)
         ID3D11RasterizerState* pRasterStateOverride = mat.RasterStateOverride;
         if (pRasterStateOverride)
         {
-            context->RSGetState(&pCurrRasterState);
-            context->RSSetState(pRasterStateOverride);
+            //context->RSGetState(&pCurrRasterState);
+            //context->RSSetState(pRasterStateOverride);
         }
 
         //context->IASetInputLayout(VS->InputLayout);
@@ -210,19 +206,19 @@ void EntityRenderer::InstancedDraw(ID3D11DeviceContext* context)
         //context->PSSetShader(PS->Shader, nullptr, 0);
 
         // Update Material Param Data:
-        ConstantBufferUpdateManager::MapUnmap(&MaterialParamsCB, (void*)&mat.Description, context);
+        //ConstantBufferUpdateManager::MapUnmap(&MaterialParamsCB, (void*)&mat.Description, context);
 
         // Bind Textures expected by the shader
-        if (mat.Resources)
-            context->PSSetShaderResources(0, (UINT)TextureSlots::COUNT, mat.Resources->SRVs);
-
-        // Submit draw call to GPU
-        context->DrawIndexedInstanced(mesh->IndexCount, drawCtx->InstanceCount, 0, 0, 0);
-
-        if (pRasterStateOverride)
-        {
-            context->RSSetState(pCurrRasterState); // Put things back how they were
-        }
+        //if (mat.Resources)
+        //    context->PSSetShaderResources(0, (UINT)TextureSlots::COUNT, mat.Resources->SRVs);
+        //
+        //// Submit draw call to GPU
+        //context->DrawIndexedInstanced(mesh->IndexCount, drawCtx->InstanceCount, 0, 0, 0);
+        //
+        //if (pRasterStateOverride)
+        //{
+        //    context->RSSetState(pCurrRasterState); // Put things back how they were
+        //}
     }
 }
 
@@ -234,7 +230,7 @@ EntityRenderer::~EntityRenderer()
 
         free(drawCtx.WorldMatrices);
         drawCtx.WorldMatrices = nullptr;
-        drawCtx.DynamicBuffer->Release();
+        //drawCtx.DynamicBuffer->Release();
     }
     
     delete[] InstancingPasses;
@@ -242,8 +238,8 @@ EntityRenderer::~EntityRenderer()
 
     free(Entities);
 
-    ConstantBufferUpdateManager::Cleanup(&MaterialParamsCB);
-    ConstantBufferUpdateManager::Cleanup(&EntityCB);
+    //ConstantBufferUpdateManager::Cleanup(&MaterialParamsCB);
+    //ConstantBufferUpdateManager::Cleanup(&EntityCB);
     
     ResourceCodex::Destroy();
 }

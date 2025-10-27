@@ -164,4 +164,17 @@ MaterialIndex ResourceCodex::PushMaterial(const Material& material)
     return (MaterialIndex)(mMaterials.size() - 1);
 }
 
+MaterialType* ResourceCodex::InsertMaterialType(const char* name)
+{
+    if (!name)
+        return nullptr;
+
+    MaterialTypeID typeId = fnv1a(name);
+    auto emplaceResult = mMaterialTypeMap.emplace(typeId, name);
+    if (emplaceResult.second == false)
+        return nullptr;
+
+    return &emplaceResult.first->second;
+}
+
 }

@@ -4,7 +4,7 @@ Date : 2025/4
 Description : Interface for Pipeline state objects (PSO)
 ----------------------------------------------*/
 #ifndef MUON_PIPELINESTATE_H
-#define MUON_PIPELINE_STATE_H
+#define MUON_PIPELINESTATE_H
 
 #include <d3d12.h>
 

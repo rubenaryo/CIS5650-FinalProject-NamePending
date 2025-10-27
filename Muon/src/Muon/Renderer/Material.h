@@ -9,11 +9,11 @@ Description : Material class for shader information
 #include "DXCore.h"
 #include "CBufferStructs.h"
 
+#include <Muon/Renderer/PipelineState.h>
+#include <unordered_map>
+
 namespace Renderer
 {
-struct VertexShader;
-struct PixelShader;
-struct GraphicsPipelineState;
 struct VertexShader;
 struct PixelShader;
 }
@@ -28,6 +28,17 @@ enum class TextureSlots : UINT
     ROUGHNESS = 3U,
     CUBE      = 4U,
     COUNT
+};
+
+enum TextureSlotFlags : UINT
+{
+    TSF_NONE        = 0,
+    TSF_DIFFUSE     = 1 << (UINT)TextureSlots::DIFFUSE,
+    TSF_NORMAL      = 1 << (UINT)TextureSlots::NORMAL,
+    TSF_SPECULAR    = 1 << (UINT)TextureSlots::SPECULAR,
+    TSF_ROUGHNESS   = 1 << (UINT)TextureSlots::ROUGHNESS,
+    TSF_CUBE        = 1 << (UINT)TextureSlots::CUBE,
+    TSF_ALL         = ~0    
 };
 
 struct ResourceBindChord
@@ -46,10 +57,79 @@ struct Material
     cbMaterialParams            Description;
 };
 
-struct Material_DX12
+// Note: When adding to this enum, make sure to add to the sParamSizes array below in GetParamTypeSize.
+enum class ParameterType
 {
-    const VertexShader* VS = nullptr;
-    const PixelShader* PS = nullptr;
+    Int = 0,
+    Float,
+    Float2,
+    Float3,
+    Float4,
+    Count,
+    Invalid
+};
+
+size_t GetParamTypeSize(ParameterType type);
+
+struct ParameterDesc
+{
+    ParameterDesc(const char* name, ParameterType type);
+
+    std::string Name;
+    ParameterType Type = ParameterType::Invalid;
+    UINT Index = 0;
+    UINT Offset = 0;
+};
+
+struct ParameterValue
+{
+    union {
+        int IntValue;
+        float FloatValue;
+        DirectX::XMFLOAT2 Float2Value;
+        DirectX::XMFLOAT3 Float3Value;
+        DirectX::XMFLOAT4 Float4Value;
+    };
+};
+
+// Material types define the required parameters, shaders, and hold the underlying pipeline state.
+class MaterialType
+{
+public:
+    MaterialType(const char* name);
+
+    const std::string& GetName() const { return mName; }
+    void SetVertexShader(const VertexShader& vs);
+    void SetPixelShader(const PixelShader& ps);
+    void SetRootSignature(ID3D12RootSignature* pRootSig);
+    void AddParameter(const char* paramName, ParameterType type);
+    const ParameterDesc* GetParameter(const char* paramName) const;
+
+    bool Generate();
+
+protected:
+    const VertexShader* mpVS = nullptr;
+    const PixelShader* mpPS = nullptr;
+    std::vector<ParameterDesc> mParameters;
+    std::unordered_map<const char*, UINT> mParamNameToIndex;
+    Muon::GraphicsPipelineState mPipelineState;
+    std::string mName;
+    size_t mSize = 0;
+    TextureSlotFlags mFlags = TSF_NONE; // Used for validating that the right textures have been properly specified by the material instance
+};
+
+// MaterialInstances are immutably tied to their parent type at creation. 
+// Any parameters set will be validated against this parent type.
+class MaterialInstance
+{
+public:
+    MaterialInstance(const char* name, const MaterialType& materialType);
+    bool SetParamValue(const char* paramName, ParameterValue value);
+
+protected:
+    const MaterialType& mType;
+    std::vector<ParameterValue> mParamValues;
+    std::string mName;
 };
     
 

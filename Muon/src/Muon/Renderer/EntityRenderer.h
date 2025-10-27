@@ -36,27 +36,27 @@ public:
     EntityRenderer();
     ~EntityRenderer();
 
-    void Init(DeviceResources const& dr);
+    void Init();
 
     // For now, the renderer will handle updating the entities, 
     // In the future, perhaps a Physics Manager or AI Manager would be a good solution?
-    void Update(ID3D11DeviceContext* context, float dt);
+    void Update(float dt);
 
     // Binds the fields necessary in the material, then draws every entity in m_EntityMap
-    void Draw(ID3D11DeviceContext* context);
+    void Draw();
 
 private:
     // Performs all the instanced draw steps
-    void InstancedDraw(ID3D11DeviceContext* context);
+    void InstancedDraw();
     
     // Loads the necessary models into a collection
-    void InitMeshes(DeviceResources const& dr);
+    void InitMeshes();
 
     // Populates the Entity List
     void InitEntities();
 
     // Creates the necessary material keys within m_Map, 
-    void InitDrawContexts(ID3D11Device* device);
+    void InitDrawContexts();
 
 private:
 
@@ -69,10 +69,10 @@ private:
     UINT                  InstancingPassCount;
 
     // Constant Buffer that holds material parameters
-    ConstantBufferBindPacket MaterialParamsCB;
+    //ConstantBufferBindPacket MaterialParamsCB;
 
     // Constant Buffer that holds non-instanced entity world matrices
-    ConstantBufferBindPacket EntityCB;
+    //ConstantBufferBindPacket EntityCB;
 
 public: // Enforce use of the default constructor
     EntityRenderer(EntityRenderer const&)               = delete;
