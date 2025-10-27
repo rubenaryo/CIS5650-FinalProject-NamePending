@@ -248,103 +248,103 @@ void ShaderFactory::LoadAllShaders(ResourceCodex& codex)
 }
 
 // Loads all the textures from the directory and returns them as out params to the ResourceCodex
-void TextureFactory::LoadAllTextures(ID3D11Device* device, ID3D11DeviceContext* context, ResourceCodex& codex)
-{
-    namespace fs = std::filesystem;
-    std::string texturePath = TEXTUREPATH;
-
-    #if defined(MN_DEBUG)
-    if(!fs::exists(texturePath))
-        throw std::exception("Textures folder doesn't exist!");
-    #endif
-    
-    std::unordered_map<TextureID, ResourceBindChord> tempTexMap;
-
-    // Iterate through folder and initialize materials
-    for (const auto& entry : fs::directory_iterator(texturePath))
-    {
-        std::wstring path = entry.path().c_str();
-        std::wstring name = entry.path().filename().c_str();
-
-        ID3D11ShaderResourceView* pSRV;
-
-        // Parse file name to decide how to create this resource
-        size_t pos = name.find(L'_');
-        const std::wstring TexName = name.substr(0, pos++);
-        const std::wstring TexType = name.substr(pos, 1);
-        
-        // Parse file extension
-        pos = name.find(L'.') + 1;
-        const std::wstring TexExt  = name.substr(pos);
-        
-        HRESULT hr = E_FAIL;
-
-        ID3D11Resource* dummy = nullptr;
-
-        // Special Case: DDS Files (Cube maps with no mipmaps)
-        if (TexExt == L"dds")
-        {
-            hr = DirectX::CreateDDSTextureFromFile(
-                device,
-                path.c_str(),
-                &dummy,
-                &pSRV);
-        } 
-        else // For most textures, use WIC with mipmaps
-        {
-            hr = DirectX::CreateWICTextureFromFile(
-                device, context,    // Passing in the context auto generates mipmaps
-                path.c_str(),
-                &dummy,
-                &pSRV);
-            
-        }
-        // Clean up Texture2D
-        dummy->Release();
-        assert(!FAILED(hr));
-
-        // Classify based on Letter following '_'
-        UINT slot;
-        switch (TexType[0]) // This is the character that precedes the underscore in the naming convention
-        {
-            case 'N': // This is a normal map
-                slot = (UINT)TextureSlots::NORMAL;
-                break;
-            case 'T': // This is a texture
-                slot = (UINT)TextureSlots::DIFFUSE;
-                break;
-            case 'R': // Roughness map
-                slot = (UINT)TextureSlots::ROUGHNESS;
-                break;
-            case 'C': // Cube map
-                slot = (UINT)TextureSlots::CUBE;
-                break;
-            default:
-                #if defined(MN_DEBUG)
-                    std::wstring debugMsg = L"INFO: Attempted to load a texture with an unrecognized type: ";
-                    debugMsg.append(name.c_str());
-                    OutputDebugStringW(debugMsg.append(L"\n").c_str());
-                #endif
-
-                pSRV->Release(); // The SRV is still created, so it must be released
-                pSRV = nullptr;
-                continue;
-        }
-
-        #if defined(MN_DEBUG)
-        if (pSRV)
-        {
-            wchar_t texDebugName[64];
-            swprintf(texDebugName, 64, L"%s", name.c_str());
-            hr = pSRV->SetPrivateData(WKPDID_D3DDebugObjectNameW, 64 * sizeof(WCHAR), texDebugName);
-            COM_EXCEPT(hr);
-        }
-        #endif
-
-        TextureID tid = fnv1a(TexName.c_str());
-        codex.InsertTexture(tid, slot, pSRV);
-    }
-}
+//void TextureFactory::LoadAllTextures(ID3D11Device* device, ID3D11DeviceContext* context, ResourceCodex& codex)
+//{
+//    namespace fs = std::filesystem;
+//    std::string texturePath = TEXTUREPATH;
+//
+//    #if defined(MN_DEBUG)
+//    if(!fs::exists(texturePath))
+//        throw std::exception("Textures folder doesn't exist!");
+//    #endif
+//    
+//    std::unordered_map<TextureID, ResourceBindChord> tempTexMap;
+//
+//    // Iterate through folder and initialize materials
+//    for (const auto& entry : fs::directory_iterator(texturePath))
+//    {
+//        std::wstring path = entry.path().c_str();
+//        std::wstring name = entry.path().filename().c_str();
+//
+//        ID3D11ShaderResourceView* pSRV;
+//
+//        // Parse file name to decide how to create this resource
+//        size_t pos = name.find(L'_');
+//        const std::wstring TexName = name.substr(0, pos++);
+//        const std::wstring TexType = name.substr(pos, 1);
+//        
+//        // Parse file extension
+//        pos = name.find(L'.') + 1;
+//        const std::wstring TexExt  = name.substr(pos);
+//        
+//        HRESULT hr = E_FAIL;
+//
+//        ID3D11Resource* dummy = nullptr;
+//
+//        // Special Case: DDS Files (Cube maps with no mipmaps)
+//        if (TexExt == L"dds")
+//        {
+//            hr = DirectX::CreateDDSTextureFromFile(
+//                device,
+//                path.c_str(),
+//                &dummy,
+//                &pSRV);
+//        } 
+//        else // For most textures, use WIC with mipmaps
+//        {
+//            hr = DirectX::CreateWICTextureFromFile(
+//                device, context,    // Passing in the context auto generates mipmaps
+//                path.c_str(),
+//                &dummy,
+//                &pSRV);
+//            
+//        }
+//        // Clean up Texture2D
+//        dummy->Release();
+//        assert(!FAILED(hr));
+//
+//        // Classify based on Letter following '_'
+//        UINT slot;
+//        switch (TexType[0]) // This is the character that precedes the underscore in the naming convention
+//        {
+//            case 'N': // This is a normal map
+//                slot = (UINT)TextureSlots::NORMAL;
+//                break;
+//            case 'T': // This is a texture
+//                slot = (UINT)TextureSlots::DIFFUSE;
+//                break;
+//            case 'R': // Roughness map
+//                slot = (UINT)TextureSlots::ROUGHNESS;
+//                break;
+//            case 'C': // Cube map
+//                slot = (UINT)TextureSlots::CUBE;
+//                break;
+//            default:
+//                #if defined(MN_DEBUG)
+//                    std::wstring debugMsg = L"INFO: Attempted to load a texture with an unrecognized type: ";
+//                    debugMsg.append(name.c_str());
+//                    OutputDebugStringW(debugMsg.append(L"\n").c_str());
+//                #endif
+//
+//                pSRV->Release(); // The SRV is still created, so it must be released
+//                pSRV = nullptr;
+//                continue;
+//        }
+//
+//        #if defined(MN_DEBUG)
+//        if (pSRV)
+//        {
+//            wchar_t texDebugName[64];
+//            swprintf(texDebugName, 64, L"%s", name.c_str());
+//            hr = pSRV->SetPrivateData(WKPDID_D3DDebugObjectNameW, 64 * sizeof(WCHAR), texDebugName);
+//            COM_EXCEPT(hr);
+//        }
+//        #endif
+//
+//        TextureID tid = fnv1a(TexName.c_str());
+//        codex.InsertTexture(tid, slot, pSRV);
+//    }
+//}
 
 bool MaterialFactory::CreateAllMaterials(ID3D11Device* device, ResourceCodex& codex)
 {

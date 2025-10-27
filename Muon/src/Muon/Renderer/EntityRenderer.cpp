@@ -189,13 +189,13 @@ void EntityRenderer::InstancedDraw()
         //context->IASetIndexBuffer(mesh->IndexBuffer, DXGI_FORMAT_R32_UINT, 0);
 
         // Setup VS,PS
-        const Material mat = *sg_Codex.GetMaterial(drawCtx->MaterialIndex);
-        const VertexShader* VS = mat.VS;
-        const PixelShader*  PS = mat.PS;
-
-        ID3D11RasterizerState* pCurrRasterState = nullptr;
-        ID3D11RasterizerState* pRasterStateOverride = mat.RasterStateOverride;
-        if (pRasterStateOverride)
+        //const Material mat = *sg_Codex.GetMaterial(drawCtx->MaterialIndex);
+        //const VertexShader* VS = mat.VS;
+        //const PixelShader*  PS = mat.PS;
+        //
+        //ID3D11RasterizerState* pCurrRasterState = nullptr;
+        //ID3D11RasterizerState* pRasterStateOverride = mat.RasterStateOverride;
+        //if (pRasterStateOverride)
         {
             //context->RSGetState(&pCurrRasterState);
             //context->RSSetState(pRasterStateOverride);

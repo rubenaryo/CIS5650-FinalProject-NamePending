@@ -29,44 +29,44 @@ Game::Game() :
     mpCamera(nullptr),
     mpLightingManager(nullptr)
 {
-    mDeviceResources.RegisterDeviceNotify(this);
+    //mDeviceResources.RegisterDeviceNotify(this);
     mTimer.SetFixedTimeStep(false);
 }
 
 // Initialize device resource holder by creating all necessary resources
-bool Game::Init(HWND window, int width, int height)
-{
-    using namespace Renderer;
-
-    // Grab Window handle, creates device and context
-    mDeviceResources.SetWindow(window, width, height);
-    mDeviceResources.CreateDeviceResources();
-    CreateDeviceDependentResources();
-    
-    auto device = mDeviceResources.GetDevice();
-    auto context = mDeviceResources.GetContext();
-
-    // Init all game resources
-    ResourceCodex::Init();
-    
-    // Initialize game camera
-    mpCamera = new Camera(-5.0f, 5.0f, -5.0f, width / (float)height, 0.1f, 100.0f, 1.5f, device, context);
-
-    // Create Devices dependent on window size
-    mDeviceResources.CreateWindowSizeDependentResources();
-    CreateWindowSizeDependentResources(width, height);
-
-    // Create Materials, Meshes, Entities
-    //mEntityRenderer.Init(mDeviceResources);
-    mSkyRenderer.Init(device);
-
-    // Create Lights and respective cbuffers
-    DirectX::XMFLOAT3A camPos;
-    mpCamera->GetPosition3A(&camPos);
-    mpLightingManager = new LightingManager(mDeviceResources.GetDevice(), context, camPos);
-
-    return true;
-}
+//bool Game::Init(HWND window, int width, int height)
+//{
+//    using namespace Renderer;
+//
+//    // Grab Window handle, creates device and context
+//    mDeviceResources.SetWindow(window, width, height);
+//    mDeviceResources.CreateDeviceResources();
+//    CreateDeviceDependentResources();
+//    
+//    auto device = mDeviceResources.GetDevice();
+//    auto context = mDeviceResources.GetContext();
+//
+//    // Init all game resources
+//    ResourceCodex::Init();
+//    
+//    // Initialize game camera
+//    mpCamera = new Camera(-5.0f, 5.0f, -5.0f, width / (float)height, 0.1f, 100.0f, 1.5f, device, context);
+//
+//    // Create Devices dependent on window size
+//    mDeviceResources.CreateWindowSizeDependentResources();
+//    CreateWindowSizeDependentResources(width, height);
+//
+//    // Create Materials, Meshes, Entities
+//    //mEntityRenderer.Init(mDeviceResources);
+//    mSkyRenderer.Init(device);
+//
+//    // Create Lights and respective cbuffers
+//    DirectX::XMFLOAT3A camPos;
+//    mpCamera->GetPosition3A(&camPos);
+//    mpLightingManager = new LightingManager(mDeviceResources.GetDevice(), context, camPos);
+//
+//    return true;
+//}
 
 Renderer::Mesh testMesh;
 Muon::GraphicsPipelineState testPSO;
@@ -246,15 +246,15 @@ void Game::OnResuming()
 // Recreates Window size dependent resources if needed
 void Game::OnMove()
 {
-    auto r = mDeviceResources.GetOutputSize();
-    mDeviceResources.WindowSizeChanged(r.right, r.bottom);
+    //auto r = mDeviceResources.GetOutputSize();
+    //mDeviceResources.WindowSizeChanged(r.right, r.bottom);
 }
 
 // Recreates Window size dependent resources if needed
 void Game::OnResize(int newWidth, int newHeight)
 {
-    if (!mDeviceResources.WindowSizeChanged(newWidth, newHeight))
-        return;
+    //if (!mDeviceResources.WindowSizeChanged(newWidth, newHeight))
+    //    return;
 
     #if defined(MN_DEBUG)
         try
@@ -263,8 +263,8 @@ void Game::OnResize(int newWidth, int newHeight)
         }
         catch (std::exception const& e)
         {
-            MessageBoxA(mDeviceResources.GetWindow(), e.what(), "Fatal Exception!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
-            DestroyWindow(mDeviceResources.GetWindow());
+            //MessageBoxA(mDeviceResources.GetWindow(), e.what(), "Fatal Exception!", MB_OK | MB_ICONERROR | MB_SETFOREGROUND);
+            //DestroyWindow(mDeviceResources.GetWindow());
         }
     #else
         CreateWindowSizeDependentResources(newWidth, newHeight);

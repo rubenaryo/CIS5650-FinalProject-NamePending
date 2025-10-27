@@ -19,7 +19,7 @@ struct ShaderFactory final
 
 struct TextureFactory final
 {
-    typedef std::pair<TextureID, const ResourceBindChord> TexturePair;
+    //typedef std::pair<TextureID, const ResourceBindChord> TexturePair;
     static void LoadAllTextures(ID3D11Device* device, ID3D11DeviceContext* context, ResourceCodex& codex);
 };
 

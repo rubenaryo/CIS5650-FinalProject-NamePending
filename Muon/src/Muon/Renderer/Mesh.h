@@ -9,8 +9,8 @@ Description : Mesh stores the vertex,index buffers ready to be drawn by DirectX
 #include "DXCore.h"
 #include "Shader.h"
 
-namespace Renderer {
-
+namespace Renderer
+{
 struct Mesh
 {
     bool Init(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount, DXGI_FORMAT indexFormat);

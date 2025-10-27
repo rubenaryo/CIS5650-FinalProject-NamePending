@@ -29,7 +29,7 @@ public:
 
 private:
     const Mesh* CubeMesh;
-    Material    SkyMaterialCopy;
+    //Material    SkyMaterialCopy;
 };
 
 }

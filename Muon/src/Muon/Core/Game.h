@@ -30,7 +30,7 @@ class Game final : public Renderer::IDeviceNotify
 public:
     Game();
     ~Game();
-    bool Init(HWND window, int width, int height);
+    //bool Init(HWND window, int width, int height);
 
     bool InitDX12(HWND window, int width, int height);
 
@@ -61,7 +61,7 @@ private:
     void CreateWindowSizeDependentResources(int newWidth, int newHeight);
 
     // Application's Device Resources, such as the necessary buffers/views in video memory
-    Renderer::DeviceResources mDeviceResources;
+    //Renderer::DeviceResources mDeviceResources;
 
     // Renderer for handling smart binding of objects
     Renderer::EntityRenderer mEntityRenderer;

@@ -41,21 +41,21 @@ enum TextureSlotFlags : UINT
     TSF_ALL         = ~0    
 };
 
-struct ResourceBindChord
-{
-    ID3D11ShaderResourceView*  SRVs[(UINT)TextureSlots::COUNT];
-};
+//struct ResourceBindChord
+//{
+//    ID3D11ShaderResourceView*  SRVs[(UINT)TextureSlots::COUNT];
+//};
 
 // Materials own both VS and PS because they must match in the pipeline
-struct Material
-{
-    const VertexShader*         VS = nullptr;
-    const PixelShader*          PS = nullptr;;
-    const ResourceBindChord*    Resources = nullptr;
-    ID3D11RasterizerState*      RasterStateOverride = nullptr;
-    ID3D11DepthStencilState*    DepthStencilStateOverride = nullptr;
-    cbMaterialParams            Description;
-};
+//struct Material
+//{
+//    const VertexShader*         VS = nullptr;
+//    const PixelShader*          PS = nullptr;;
+//    const ResourceBindChord*    Resources = nullptr;
+//    ID3D11RasterizerState*      RasterStateOverride = nullptr;
+//    ID3D11DepthStencilState*    DepthStencilStateOverride = nullptr;
+//    cbMaterialParams            Description;
+//};
 
 // Note: When adding to this enum, make sure to add to the sParamSizes array below in GetParamTypeSize.
 enum class ParameterType

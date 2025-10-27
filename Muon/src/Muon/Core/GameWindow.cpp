@@ -118,7 +118,6 @@ namespace Core
         bool result = false;
         try
         {
-            //result = m_pGame->Init(hwnd, width, height);
             result = m_pGame->InitDX12(hwnd, width, height);
         }
         catch (std::exception const& e)
