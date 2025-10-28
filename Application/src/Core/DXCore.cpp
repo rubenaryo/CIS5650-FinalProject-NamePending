@@ -31,7 +31,7 @@ namespace Muon
 {
     Microsoft::WRL::ComPtr<ID3D12Device> gDevice;
 
-    ID3D12Fence* gFence = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Fence> gFence;
     UINT64 gFenceVal = 0;
 
     UINT gRTVSize = 0;
@@ -39,23 +39,23 @@ namespace Muon
     UINT gCBVSize = 0;
     UINT gMSAAQuality = 0;
 
-    ID3D12CommandQueue* gCommandQueue = nullptr;
-    ID3D12CommandAllocator* gCommandAllocator = nullptr;
-    ID3D12GraphicsCommandList* gCommandList = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12CommandQueue> gCommandQueue;
+    Microsoft::WRL::ComPtr<ID3D12CommandAllocator> gCommandAllocator;
+    Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> gCommandList;
 
     DXGI_FORMAT BackBufferFormat = DXGI_FORMAT_R8G8B8A8_UNORM;
     DXGI_FORMAT DepthStencilFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
     const int SWAP_CHAIN_BUFFER_COUNT = 2;
     int CurrentBackBuffer = 0;
 
-    Microsoft::WRL::ComPtr<IDXGISwapChain3> gSwapChain = nullptr;
-    ID3D12Resource* gSwapChainBuffers[SWAP_CHAIN_BUFFER_COUNT] = {0};
-    ID3D12Resource* gDepthStencilBuffer = nullptr;
+    Microsoft::WRL::ComPtr<IDXGISwapChain3> gSwapChain;
+    Microsoft::WRL::ComPtr<ID3D12Resource> gSwapChainBuffers[SWAP_CHAIN_BUFFER_COUNT];
+    Microsoft::WRL::ComPtr<ID3D12Resource> gDepthStencilBuffer;
 
-    D3D12_VIEWPORT gViewport = {0};
+    D3D12_VIEWPORT gViewport = { 0 };
 
-    ID3D12DescriptorHeap* gRTVHeap = nullptr;
-    ID3D12DescriptorHeap* gDSVHeap = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> gRTVHeap;
+    Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> gDSVHeap;
 
     tagRECT gScissorRect;
 
@@ -65,21 +65,21 @@ namespace Muon
     std::wstring gFeatureLevelStr(L"Direct3D ???");
 
     // TODO: Move these to the main application and generalize them. 
-    ID3D12RootSignature* gRootSig = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> gRootSig;
 
     /////////////////////////////////////////////////////////////////////
     // Accessors
 
-    ID3D12Device* GetDevice() { return gDevice.Get(); } 
-    ID3D12Fence* GetFence() { return gFence; }
-    ID3D12RootSignature* GetRootSignature() { return gRootSig; }
+    ID3D12Device* GetDevice() { return gDevice.Get(); }
+    ID3D12Fence* GetFence() { return gFence.Get(); }
+    ID3D12RootSignature* GetRootSignature() { return gRootSig.Get(); }
     UINT GetRTVDescriptorSize() { return gRTVSize; }
     UINT GetDSVDescriptorSize() { return gDSVSize; }
     UINT GetCBVDescriptorSize() { return gCBVSize; }
     UINT GetMSAAQualityLevel() { return gMSAAQuality; }
-    ID3D12CommandQueue* GetCommandQueue() { return gCommandQueue; }
-    ID3D12GraphicsCommandList* GetCommandList() { return gCommandList; }
-    ID3D12CommandAllocator* GetCommandAllocator() { return gCommandAllocator; }
+    ID3D12CommandQueue* GetCommandQueue() { return gCommandQueue.Get(); }
+    ID3D12GraphicsCommandList* GetCommandList() { return gCommandList.Get(); }
+    ID3D12CommandAllocator* GetCommandAllocator() { return gCommandAllocator.Get(); }
     IDXGISwapChain3* GetSwapChain() { return gSwapChain.Get(); }
     DXGI_FORMAT GetBackBufferFormat() { return BackBufferFormat; }
     DXGI_FORMAT GetDepthStencilFormat() { return DepthStencilFormat; }
@@ -151,7 +151,7 @@ namespace Muon
             return false;
         }
 
-#if MN_DEBUG
+    #if MN_DEBUG
         ComPtr<IDXGIInfoQueue> dxgiInfoQueue;
         if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(dxgiInfoQueue.GetAddressOf()))))
         {
@@ -169,7 +169,7 @@ namespace Muon
             filter.DenyList.pIDList = hide;
             dxgiInfoQueue->AddStorageFilterEntries(DXGI_DEBUG_DXGI, &filter);
         }
-#endif
+    #endif
         return true;
     }
 
@@ -218,7 +218,7 @@ namespace Muon
         return out_device.Get() != nullptr;
     }
 
-    bool CreateFence(ID3D12Device* pDevice, ID3D12Fence** out_fence)
+    bool CreateFence(ID3D12Device* pDevice, Microsoft::WRL::ComPtr<ID3D12Fence>& out_fence)
     {
         if (!pDevice)
         {
@@ -226,7 +226,7 @@ namespace Muon
             return false;
         }
 
-        HRESULT hr = pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(out_fence));
+        HRESULT hr = pDevice->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(out_fence.GetAddressOf()));
         COM_EXCEPT(hr);
 
         gFenceVal = 1;
@@ -246,7 +246,7 @@ namespace Muon
 
         *out_rtv = pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
         *out_dsv = pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
-        *out_cbv = pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);        
+        *out_cbv = pDevice->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
         return true;
     }
 
@@ -266,42 +266,42 @@ namespace Muon
         return SUCCEEDED(hr);
     }
 
-    bool CreateCommandObjects(ID3D12Device* pDevice, ID3D12CommandQueue** out_queue, ID3D12CommandAllocator** out_alloc, ID3D12GraphicsCommandList** out_list)
+    bool CreateCommandObjects(ID3D12Device* pDevice,
+        Microsoft::WRL::ComPtr<ID3D12CommandQueue>& out_queue,
+        Microsoft::WRL::ComPtr<ID3D12CommandAllocator>& out_alloc,
+        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList>& out_list)
     {
         HRESULT hr;
 
         D3D12_COMMAND_QUEUE_DESC queueDesc = {};
         queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
         queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
-        hr = pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(out_queue));
+        hr = pDevice->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(out_queue.GetAddressOf()));
         COM_EXCEPT(hr);
 
         hr = pDevice->CreateCommandAllocator(
             D3D12_COMMAND_LIST_TYPE_DIRECT,
-            IID_PPV_ARGS(out_alloc));
+            IID_PPV_ARGS(out_alloc.GetAddressOf()));
         COM_EXCEPT(hr);
 
         hr = pDevice->CreateCommandList(
             0,
             D3D12_COMMAND_LIST_TYPE_DIRECT,
-            *out_alloc, // Associated command allocator
-            nullptr,                   // Initial PipelineStateObject
-            IID_PPV_ARGS(out_list));
+            out_alloc.Get(), // Associated command allocator
+            nullptr,         // Initial PipelineStateObject
+            IID_PPV_ARGS(out_list.GetAddressOf()));
         COM_EXCEPT(hr);
 
         // Start off in a closed state.  This is because the first time we refer 
         // to the command list we will Reset it, and it needs to be closed before
         // calling Reset.
-        (*out_list)->Close();
+        out_list->Close();
 
         return SUCCEEDED(hr);
     }
 
     bool CreateSwapChain(ID3D12Device* pDevice, IDXGIFactory6* pFactory, ID3D12CommandQueue* pQueue, HWND hwnd, int width, int height, Microsoft::WRL::ComPtr<IDXGISwapChain3>& out_swapchain)
     {
-        // Release the previous swapchain we will be recreating.
-        //mSwapChain.Reset();
-
         DXGI_SWAP_CHAIN_DESC1 sd = { 0 };
         sd.BufferCount = SWAP_CHAIN_BUFFER_COUNT;
         sd.Width = width;
@@ -311,11 +311,6 @@ namespace Muon
         sd.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
         sd.SampleDesc.Count = 1;
 
-        // Note: Swap chain uses queue to perform flush.
-        //HRESULT hr = pFactory->CreateSwapChain(
-        //    pQueue,
-        //    &sd,
-        //    out_swapchain);
         Microsoft::WRL::ComPtr<IDXGISwapChain1> swapChain;
         HRESULT hr = pFactory->CreateSwapChainForHwnd(
             pQueue,
@@ -333,7 +328,9 @@ namespace Muon
         return SUCCEEDED(hr);
     }
 
-    bool CreateDescriptorHeaps(ID3D12Device* pDevice, ID3D12DescriptorHeap** out_rtv, ID3D12DescriptorHeap** out_dsv)
+    bool CreateDescriptorHeaps(ID3D12Device* pDevice,
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& out_rtv,
+        Microsoft::WRL::ComPtr<ID3D12DescriptorHeap>& out_dsv)
     {
         D3D12_DESCRIPTOR_HEAP_DESC rtvHeapDesc;
         rtvHeapDesc.NumDescriptors = SWAP_CHAIN_BUFFER_COUNT;
@@ -342,7 +339,7 @@ namespace Muon
         rtvHeapDesc.NodeMask = 0;
 
         HRESULT hr = pDevice->CreateDescriptorHeap(
-            &rtvHeapDesc, IID_PPV_ARGS(out_rtv));
+            &rtvHeapDesc, IID_PPV_ARGS(out_rtv.GetAddressOf()));
         COM_EXCEPT(hr);
 
         D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc;
@@ -351,29 +348,29 @@ namespace Muon
         dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
         dsvHeapDesc.NodeMask = 0;
         hr = pDevice->CreateDescriptorHeap(
-            &dsvHeapDesc, IID_PPV_ARGS(out_dsv));
+            &dsvHeapDesc, IID_PPV_ARGS(out_dsv.GetAddressOf()));
         COM_EXCEPT(hr);
 
         return SUCCEEDED(hr);
     }
 
-    bool CreateRenderTargetView(ID3D12Device* pDevice, IDXGISwapChain3* pSwapChain, ID3D12Resource* pSwapChainBuffers[SWAP_CHAIN_BUFFER_COUNT])
+    bool CreateRenderTargetView(ID3D12Device* pDevice, IDXGISwapChain3* pSwapChain, Microsoft::WRL::ComPtr<ID3D12Resource> pSwapChainBuffers[SWAP_CHAIN_BUFFER_COUNT])
     {
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(gRTVHeap->GetCPUDescriptorHandleForHeapStart());
         HRESULT hr;
         for (UINT i = 0; i != SWAP_CHAIN_BUFFER_COUNT; ++i)
         {
-            hr = pSwapChain->GetBuffer(i, IID_PPV_ARGS(&pSwapChainBuffers[i]));
+            hr = pSwapChain->GetBuffer(i, IID_PPV_ARGS(pSwapChainBuffers[i].GetAddressOf()));
             COM_EXCEPT(hr);
 
-            pDevice->CreateRenderTargetView(pSwapChainBuffers[i], nullptr, rtvHandle);
+            pDevice->CreateRenderTargetView(pSwapChainBuffers[i].Get(), nullptr, rtvHandle);
             rtvHandle.Offset(1, gRTVSize);
         }
 
         return true;
     }
-    
-    bool CreateDepthStencilBuffer(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList, ID3D12CommandQueue* pCommandQueue, int width, int height, ID3D12Resource** out_depthStencilBuffer)
+
+    bool CreateDepthStencilBuffer(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList, ID3D12CommandQueue* pCommandQueue, int width, int height, Microsoft::WRL::ComPtr<ID3D12Resource>& out_depthStencilBuffer)
     {
         if (!pDevice || !pCommandList)
         {
@@ -388,7 +385,7 @@ namespace Muon
         depthStencilDesc.Height = height;
         depthStencilDesc.DepthOrArraySize = 1;
         depthStencilDesc.MipLevels = 1;
-        depthStencilDesc.SampleDesc.Count = 1; // TODO: assuming 4xMSAA
+        depthStencilDesc.SampleDesc.Count = 1;
         depthStencilDesc.SampleDesc.Quality = GetMSAAQualityLevel();
         depthStencilDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
         depthStencilDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
@@ -404,7 +401,7 @@ namespace Muon
             &depthStencilDesc,
             D3D12_RESOURCE_STATE_COMMON,
             &optClear,
-            IID_PPV_ARGS(out_depthStencilBuffer));
+            IID_PPV_ARGS(out_depthStencilBuffer.GetAddressOf()));
         COM_EXCEPT(hr);
 
         // Create a depth stencil view
@@ -413,20 +410,17 @@ namespace Muon
         dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
         dsvDesc.Format = DepthStencilFormat;
         dsvDesc.Texture2D.MipSlice = 0;
-        pDevice->CreateDepthStencilView(*out_depthStencilBuffer, &dsvDesc, DepthStencilView());
+        pDevice->CreateDepthStencilView(out_depthStencilBuffer.Get(), &dsvDesc, DepthStencilView());
 
-        // Trnasition from initial -> depth buffer use
+        // Transition from initial -> depth buffer use
         pCommandList->Reset(GetCommandAllocator(), nullptr);
 
         pCommandList->ResourceBarrier(1,
-            &CD3DX12_RESOURCE_BARRIER::Transition(*out_depthStencilBuffer, D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
-
-
-        // TODO: Flush command queue?
+            &CD3DX12_RESOURCE_BARRIER::Transition(out_depthStencilBuffer.Get(), D3D12_RESOURCE_STATE_COMMON, D3D12_RESOURCE_STATE_DEPTH_WRITE));
 
         return SUCCEEDED(hr);
     }
-    
+
     bool SetViewport(ID3D12GraphicsCommandList* pCommandList, int x, int y, int width, int height, float minDepth, float maxDepth)
     {
         if (!pCommandList)
@@ -446,7 +440,7 @@ namespace Muon
         pCommandList->RSSetViewports(1, &vp);
         return true;
     }
-    
+
     bool SetScissorRects(ID3D12GraphicsCommandList* pCommandList, long left, long top, long right, long bottom)
     {
         if (!pCommandList)
@@ -460,7 +454,7 @@ namespace Muon
         return true;
     }
 
-    bool CreateRootSig(ID3D12Device* pDevice, ID3D12RootSignature** out_sig)
+    bool CreateRootSig(ID3D12Device* pDevice, Microsoft::WRL::ComPtr<ID3D12RootSignature>& out_sig)
     {
         CD3DX12_ROOT_SIGNATURE_DESC rootSignatureDesc;
         rootSignatureDesc.Init(0, nullptr, 0, nullptr, D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
@@ -470,7 +464,7 @@ namespace Muon
         HRESULT hr = D3D12SerializeRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1, &signature, &error);
         COM_EXCEPT(hr);
 
-        hr = pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(out_sig));
+        hr = pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(), IID_PPV_ARGS(out_sig.GetAddressOf()));
         COM_EXCEPT(hr);
 
         return SUCCEEDED(hr);
@@ -514,10 +508,9 @@ namespace Muon
         hr = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(out_state));
         COM_EXCEPT(hr);
 
-
         return SUCCEEDED(hr);
     }
-    
+
     /////////////////////////////////////////////////////////////////////
 
     bool ResetCommandList(ID3D12PipelineState* pInitialPipelineState)
@@ -547,12 +540,12 @@ namespace Muon
     {
         ID3D12GraphicsCommandList* pCommandList = GetCommandList();
 
-        pCommandList->SetGraphicsRootSignature(gRootSig);
+        pCommandList->SetGraphicsRootSignature(gRootSig.Get());
         pCommandList->RSSetViewports(1, &gViewport);
         pCommandList->RSSetScissorRects(1, &gScissorRect);
 
         // Set back buffer as render target
-        pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gSwapChainBuffers[CurrentBackBuffer], D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
+        pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gSwapChainBuffers[CurrentBackBuffer].Get(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET));
 
         CD3DX12_CPU_DESCRIPTOR_HANDLE rtvHandle(gRTVHeap->GetCPUDescriptorHandleForHeapStart(), CurrentBackBuffer, gRTVSize);
         pCommandList->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
@@ -568,7 +561,7 @@ namespace Muon
     {
         // Now set back buffer as present target
         ID3D12GraphicsCommandList* pCommandList = GetCommandList();
-        pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gSwapChainBuffers[CurrentBackBuffer], D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
+        pCommandList->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(gSwapChainBuffers[CurrentBackBuffer].Get(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT));
         return true;
     }
 
@@ -591,11 +584,10 @@ namespace Muon
         return SUCCEEDED(hr);
     }
 
-    // This is not good but just doing this for testing DX12 Initialization...
     bool FlushCommandQueue()
     {
         const UINT64 currFence = gFenceVal;
-        HRESULT hr = GetCommandQueue()->Signal(gFence, currFence);
+        HRESULT hr = GetCommandQueue()->Signal(gFence.Get(), currFence);
         gFenceVal++;
 
         if (gFence->GetCompletedValue() < currFence)
@@ -656,7 +648,7 @@ namespace Muon
         std::wstringstream wss;
 
         // Window Information
-        wss << L"Width: " << gViewport.Width <<
+        wss << L"Width: " << gViewport.Width << 
             L"    Height: " << gViewport.Height <<
             L"    FPS: " << fps;
 
@@ -672,38 +664,35 @@ namespace Muon
     bool InitDX12(HWND hwnd, int width, int height)
     {
         using Microsoft::WRL::ComPtr;
-    
+
         ComPtr<ID3D12Device> pDevice;
         DWORD dxgiFactoryFlags = 0;
         HRESULT hr;
         bool success = true;
-    
+
         uint32_t debugMode = 1; // Always debug for now
         if (debugMode)
         {
             success = EnableDX12DebugFeatures(dxgiFactoryFlags);
             CHECK_SUCCESS(success, "Warning: Failed to enable DX12 Debug Features!\n");
         }
-    
+
         // Obtain the DXGI factory
         ComPtr<IDXGIFactory6> dxgiFactory;
         hr = CreateDXGIFactory2(dxgiFactoryFlags, IID_PPV_ARGS(&dxgiFactory));
         COM_EXCEPT(hr);
-    
+
         D3D12EnableExperimentalFeatures(0, nullptr, nullptr, nullptr);
-    
+
         success = CreateDevice(dxgiFactory.Get(), pDevice);
         CHECK_SUCCESS(success, "Error: Failed to create DX12 Device!\n");
-    
+
         if (!pDevice)
         {
             // TODO: Fall back to WARP.
             return false;
         }
-    
-        if (gDevice != nullptr)
-            gDevice.Reset();
-    
+
         gDevice = pDevice;
         gHwnd = hwnd;
 
@@ -716,22 +705,22 @@ namespace Muon
         //success &= DetermineMSAAQuality(GetDevice(), &gMSAAQuality);
         //CHECK_SUCCESS(success, "Error: Failed to determine MSAA quality!");
 
-        success &= CreateCommandObjects(GetDevice(), &gCommandQueue, &gCommandAllocator, &gCommandList);
+        success &= CreateCommandObjects(GetDevice(), gCommandQueue, gCommandAllocator, gCommandList);
         CHECK_SUCCESS(success, "Error: Failed to create command objects!\n");
 
         success &= CreateSwapChain(GetDevice(), dxgiFactory.Get(), GetCommandQueue(), hwnd, width, height, gSwapChain);
         CHECK_SUCCESS(success, "Error: Failed to create swap chain!\n");
 
-        success &= CreateFence(GetDevice(), &gFence);
+        success &= CreateFence(GetDevice(), gFence);
         CHECK_SUCCESS(success, "Error: Failed to create fence!\n");
 
-        success &= CreateDescriptorHeaps(GetDevice(), &gRTVHeap, &gDSVHeap);
+        success &= CreateDescriptorHeaps(GetDevice(), gRTVHeap, gDSVHeap);
         CHECK_SUCCESS(success, "Error: Failed to create descriptor heaps!\n");
 
         success &= CreateRenderTargetView(GetDevice(), GetSwapChain(), gSwapChainBuffers);
         CHECK_SUCCESS(success, "Error: Failed to create render target view!\n");
 
-        success &= CreateDepthStencilBuffer(GetDevice(), GetCommandList(), GetCommandQueue(), width, height, &gDepthStencilBuffer);
+        success &= CreateDepthStencilBuffer(GetDevice(), GetCommandList(), GetCommandQueue(), width, height, gDepthStencilBuffer);
         CHECK_SUCCESS(success, "Error: Failed to create depth stencil buffer!\n");
 
         success &= SetViewport(GetCommandList(), 0, 0, width, height, 0.001f, 1000.0f);
@@ -741,7 +730,7 @@ namespace Muon
         CHECK_SUCCESS(success, "Error: Failed to set scissor rects!\n");
 
         // TODO: Move this to the application and generalize it.
-        success &= CreateRootSig(GetDevice(), &gRootSig);
+        success &= CreateRootSig(GetDevice(), gRootSig);
         CHECK_SUCCESS(success, "Error: Failed to create root signature.\n");
 
         // We've written a bunch of commands, close the list and execute it.
@@ -751,7 +740,7 @@ namespace Muon
         ExecuteCommandList();
         FlushCommandQueue();
         UpdateBackBufferIndex();
-    
+
         return success;
     }
 
@@ -785,73 +774,29 @@ namespace Muon
         // Ensure all GPU work is complete before releasing resources
         FlushCommandQueue();
 
+        // Release all resources - ComPtr handles this automatically
         for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
         {
-            if (gSwapChainBuffers[i])
-            {
-                gSwapChainBuffers[i]->Release();
-                gSwapChainBuffers[i] = nullptr;
-            }
+            gSwapChainBuffers[i].Reset();
         }
 
-        if (gDepthStencilBuffer)
-        {
-            gDepthStencilBuffer->Release();
-            gDepthStencilBuffer = nullptr;
-        }
-
-        if (gRTVHeap)
-        {
-            gRTVHeap->Release();
-            gRTVHeap = nullptr;
-        }
-
-        if (gDSVHeap)
-        {
-            gDSVHeap->Release();
-            gDSVHeap = nullptr;
-        }
-
-        if (gRootSig)
-        {
-            gRootSig->Release();
-            gRootSig = nullptr;
-        }
-
-        if (gCommandList)
-        {
-            gCommandList->Release();
-            gCommandList = nullptr;
-        }
-
-        if (gCommandAllocator)
-        {
-            gCommandAllocator->Release();
-            gCommandAllocator = nullptr;
-        }
-
-        if (gCommandQueue)
-        {
-            gCommandQueue->Release();
-            gCommandQueue = nullptr;
-        }
-
+        gDepthStencilBuffer.Reset();
+        gRTVHeap.Reset();
+        gDSVHeap.Reset();
+        gRootSig.Reset();
+        gCommandList.Reset();
+        gCommandAllocator.Reset();
+        gCommandQueue.Reset();
         gSwapChain.Reset();
-
-        if (gFence)
-        {
-            gFence->Release();
-            gFence = nullptr;
-        }
-
-        // Release device (keep this last)
+        gFence.Reset();
         gDevice.Reset();
-    
+
     #if MN_DEBUG
         // Validate everything has been freed
         ReportLiveD3D12Objects();
     #endif
 
+        // Reset global state
         gFeatureLevelStr = std::wstring();
         gFenceVal = 0;
         gRTVSize = 0;
