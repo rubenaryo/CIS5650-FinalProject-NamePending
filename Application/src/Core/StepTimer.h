@@ -11,8 +11,6 @@ Description : StepTimer Interface, taken from the DirectX Visual Studio Template
 #include <exception>
 #include <stdint.h>
 
-namespace Core {
-
 // Helper class for animation and simulation timing.
 class StepTimer
 {
@@ -201,5 +199,4 @@ private:
     bool m_isFixedTimeStep;
     uint64_t m_targetElapsedTicks;
 };
-}
 #endif
