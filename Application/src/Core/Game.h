@@ -22,8 +22,7 @@ namespace Input
 class GameInput;
 }
 
-namespace Core {
-class Game final
+class Game
 {
 public:
     Game();
@@ -51,7 +50,7 @@ public:
     void OnMouseMove(short newX, short newY);
 
 private:
-    void Update(StepTimer const& timer);
+    void Update(Muon::StepTimer const& timer);
     void Render();
 
     void CreateDeviceDependentResources();
@@ -68,7 +67,6 @@ private:
     Muon::GraphicsPipelineState mPSO;
     
     // Timer for the main game loop
-    StepTimer mTimer;
+    Muon::StepTimer mTimer;
 };
-}
 #endif

@@ -24,8 +24,6 @@ helper macros for reaching certain paths
 #define SHADERPATH "..\\_bin\\Shaders\\"
 #define SHADERPATHW WIDEN(SHADERPATH)
 
-namespace Core
-{
 inline std::wstring GetShaderPathFromFile_W(std::wstring fileName)
 {
     std::wstring path = SHADERPATHW;
@@ -42,7 +40,5 @@ inline std::string GetModelPathFromFile(std::string fileName)
 {
     std::string path = MODELPATH;
     return path + fileName;
-}
-
 }
 #endif

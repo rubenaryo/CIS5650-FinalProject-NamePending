@@ -17,11 +17,6 @@ Description : Implementation of Game.h
 #include <Core/hash_util.h>
 #include <Utils/Utils.h>
 
-#define USE_DX11 0
-
-namespace Core
-{
-
 Game::Game() :
     mpInput(new Input::GameInput()),
     mpCamera(nullptr)
@@ -88,7 +83,7 @@ void Game::Frame()
     Muon::UpdateTitleBar(mTimer.GetFramesPerSecond(), mTimer.GetFrameCount());
 }
 
-void Game::Update(StepTimer const& timer)
+void Game::Update(Muon::StepTimer const& timer)
 {
     float elapsedTime = float(timer.GetElapsedSeconds());
     mpInput->Frame(elapsedTime, mpCamera);
@@ -188,5 +183,3 @@ void Game::OnMouseMove(short newX, short newY)
     mpInput->OnMouseMove(newX, newY);
 }
 #pragma endregion
-}
-

@@ -5,7 +5,7 @@ Description : Transform class implementation
 ----------------------------------------------*/
 #include "Transform.h"
 
-namespace Core {
+namespace Muon {
 
 using namespace DirectX;
 
