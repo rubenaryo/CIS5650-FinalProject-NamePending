@@ -17,6 +17,11 @@ Description : Implementation of Game.h
 #include <Core/hash_util.h>
 #include <Utils/Utils.h>
 
+#define USE_DX11 0
+
+namespace Core
+{
+
 Game::Game() :
     mpInput(new Input::GameInput()),
     mpCamera(nullptr)
@@ -183,3 +188,5 @@ void Game::OnMouseMove(short newX, short newY)
     mpInput->OnMouseMove(newX, newY);
 }
 #pragma endregion
+}
+

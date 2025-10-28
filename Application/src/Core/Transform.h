@@ -9,6 +9,8 @@ Description : Transform class for game objects
 #include <Core/DXCore.h>
 #include <DirectXMath.h>
 
+namespace Core
+{
 struct Transform
 {
     explicit Transform();
@@ -45,4 +47,5 @@ private:
     DirectX::XMVECTOR mQuatRotation;
     DirectX::XMVECTOR mScale;
 };
+}
 #endif

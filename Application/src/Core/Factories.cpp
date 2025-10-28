@@ -30,7 +30,7 @@ MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescripti
 
     // Load assimpScene with proper flags
     const aiScene* pScene = Importer.ReadFile(
-        GetModelPathFromFile(fileName),
+        Core::GetModelPathFromFile(fileName),
         aiProcess_Triangulate           |
         aiProcess_JoinIdenticalVertices |   // Remove unnecessary duplicate information
         aiProcess_GenNormals            |   // Ensure normals are generated

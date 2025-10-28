@@ -7,9 +7,10 @@ This class encapsulates all app functionality
 #ifndef GAME_H
 #define GAME_H
 
+#include "StepTimer.h"
+
 #include <Core/Mesh.h>
 #include <Core/PipelineState.h>
-#include <Core/StepTimer.h>
 
 namespace Renderer
 {
@@ -21,7 +22,8 @@ namespace Input
 class GameInput;
 }
 
-class Game
+namespace Core {
+class Game final
 {
 public:
     Game();
@@ -68,5 +70,5 @@ private:
     // Timer for the main game loop
     StepTimer mTimer;
 };
-
+}
 #endif

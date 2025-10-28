@@ -5,6 +5,8 @@ Description : Transform class implementation
 ----------------------------------------------*/
 #include "Transform.h"
 
+namespace Core {
+
 using namespace DirectX;
 
 Transform::Transform() :
@@ -91,4 +93,6 @@ void Transform::SetScale(float x, float y, float z)
 void Transform::SetScale(DirectX::XMVECTOR scales)
 {
     mScale = scales;
+}
+
 }

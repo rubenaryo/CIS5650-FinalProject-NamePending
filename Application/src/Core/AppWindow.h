@@ -6,9 +6,12 @@ Description : Definitions for OO-Window Creation
 #ifndef APPWINDOW_H
 #define APPWINDOW_H
 
-#include <Core/WinApp.h>
+#include "WinApp.h"
 #include <Core/Game.h>
+//#include <combaseapi.h>
 
+namespace Core
+{
 // A templated base class that other windows will inherit from
 template <class WindowType>
 class BaseWindow
@@ -95,5 +98,7 @@ BOOL BaseWindow<WindowType>::Create(PCWSTR lpWindowName, HINSTANCE hInstance, DW
     {
         return FALSE;
     }
+}
+
 }
 #endif
