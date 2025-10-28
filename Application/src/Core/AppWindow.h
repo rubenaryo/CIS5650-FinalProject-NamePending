@@ -43,6 +43,8 @@ public:
     // Default constructor initializes to NULL
     BaseWindow() : m_hwnd(NULL) {};
 
+    virtual ~BaseWindow() {};
+
     // Method to create and register a WNDCLASS
     BOOL Create(PCWSTR lpWindowName, HINSTANCE hInstance, DWORD dwStyle, DWORD dwExStyle = 0, LONG x = 0, LONG y = 0, LONG nWidth = 800, LONG nHeight = 600, HWND hWndParent = 0, HMENU hMenu = 0);
 

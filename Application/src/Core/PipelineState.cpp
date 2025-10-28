@@ -22,6 +22,12 @@ bool PipelineState::Bind() const
     return true;
 }
 
+void PipelineState::Destroy()
+{
+    mpPipelineState->Release();
+    mpPipelineState = nullptr;
+}
+
 GraphicsPipelineState::GraphicsPipelineState()
 {
     // Set some default values

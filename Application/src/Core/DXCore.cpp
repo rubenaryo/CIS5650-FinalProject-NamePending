@@ -29,7 +29,7 @@ do {                                \
 
 namespace Muon
 {
-    ID3D12Device* gDevice = nullptr;
+    Microsoft::WRL::ComPtr<ID3D12Device> gDevice;
 
     ID3D12Fence* gFence = nullptr;
     UINT64 gFenceVal = 0;
@@ -70,7 +70,7 @@ namespace Muon
     /////////////////////////////////////////////////////////////////////
     // Accessors
 
-    ID3D12Device* GetDevice() { return gDevice; } 
+    ID3D12Device* GetDevice() { return gDevice.Get(); } 
     ID3D12Fence* GetFence() { return gFence; }
     ID3D12RootSignature* GetRootSignature() { return gRootSig; }
     UINT GetRTVDescriptorSize() { return gRTVSize; }
@@ -180,7 +180,7 @@ namespace Muon
         SIZE_T MaxSize = 0;
 
         // Determine best adapter and device
-        for (uint32_t Idx = 0; DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(Idx, pAdapter.GetAddressOf()); ++Idx)
+        for (uint32_t Idx = 0; DXGI_ERROR_NOT_FOUND != pFactory->EnumAdapters1(Idx, pAdapter.ReleaseAndGetAddressOf()); ++Idx)
         {
             DXGI_ADAPTER_DESC1 desc;
             pAdapter->GetDesc1(&desc);
@@ -190,13 +190,14 @@ namespace Muon
                 continue;
 
             // Can create a D3D12 device?
-            if (FAILED(D3D12CreateDevice(pAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(pTempDevice.GetAddressOf()))))
+            Microsoft::WRL::ComPtr<ID3D12Device> testDevice;
+            if (FAILED(D3D12CreateDevice(pAdapter.Get(), D3D_FEATURE_LEVEL_12_0, IID_PPV_ARGS(testDevice.GetAddressOf()))))
             {
                 Muon::Print("Error: Failed to create device!\n");
                 continue;
             }
 
-            if (!IsDirectXRaytracingSupported(pTempDevice.Get()))
+            if (!IsDirectXRaytracingSupported(testDevice.Get()))
             {
                 Muon::Print("Warning: Found device does NOT support DXR raytracing.\n");
             }
@@ -206,12 +207,13 @@ namespace Muon
                 continue;
 
             MaxSize = desc.DedicatedVideoMemory;
+            pTempDevice = testDevice;
             Muon::Printf(L"Selected GPU:  %s (%u MB)\n", desc.Description, desc.DedicatedVideoMemory >> 20);
         }
 
         if (pTempDevice.Get() != nullptr)
         {
-            out_device = pTempDevice.Detach();
+            out_device = pTempDevice;
         }
         return out_device.Get() != nullptr;
     }
@@ -667,7 +669,7 @@ namespace Muon
         return true;
     }
 
-    bool Initialize(HWND hwnd, int width, int height)
+    bool InitDX12(HWND hwnd, int width, int height)
     {
         using Microsoft::WRL::ComPtr;
     
@@ -700,9 +702,9 @@ namespace Muon
         }
     
         if (gDevice != nullptr)
-            gDevice->Release();
+            gDevice.Reset();
     
-        gDevice = pDevice.Detach();
+        gDevice = pDevice;
         gHwnd = hwnd;
 
         success &= GetDescriptorSizes(GetDevice(), &gRTVSize, &gDSVSize, &gCBVSize);
@@ -751,6 +753,115 @@ namespace Muon
         UpdateBackBufferIndex();
     
         return success;
+    }
+
+#if MN_DEBUG
+    void ReportLiveD3D12Objects()
+    {
+        Microsoft::WRL::ComPtr<IDXGIDebug1> dxgiDebug;
+        if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&dxgiDebug))))
+        {
+            Muon::Print("\n========================================\n");
+            Muon::Print("D3D12 & DXGI Live Objects Report\n");
+            Muon::Print("========================================\n");
+            DXGI_DEBUG_RLO_FLAGS flags = (DXGI_DEBUG_RLO_FLAGS)(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL);
+            HRESULT hr = dxgiDebug->ReportLiveObjects(DXGI_DEBUG_ALL, flags);
+
+            if (SUCCEEDED(hr))
+            {
+                Muon::Print("If you see no DXGI/D3D12 warnings above, cleanup was successful\n");
+            }
+            else
+            {
+                Muon::Printf("Failed to generate report. HRESULT: 0x%08X\n", hr);
+            }
+            Muon::Print("========================================\n\n");
+        }
+    }
+#endif
+
+    bool DestroyDX12()
+    {
+        // Ensure all GPU work is complete before releasing resources
+        FlushCommandQueue();
+
+        for (int i = 0; i < SWAP_CHAIN_BUFFER_COUNT; ++i)
+        {
+            if (gSwapChainBuffers[i])
+            {
+                gSwapChainBuffers[i]->Release();
+                gSwapChainBuffers[i] = nullptr;
+            }
+        }
+
+        if (gDepthStencilBuffer)
+        {
+            gDepthStencilBuffer->Release();
+            gDepthStencilBuffer = nullptr;
+        }
+
+        if (gRTVHeap)
+        {
+            gRTVHeap->Release();
+            gRTVHeap = nullptr;
+        }
+
+        if (gDSVHeap)
+        {
+            gDSVHeap->Release();
+            gDSVHeap = nullptr;
+        }
+
+        if (gRootSig)
+        {
+            gRootSig->Release();
+            gRootSig = nullptr;
+        }
+
+        if (gCommandList)
+        {
+            gCommandList->Release();
+            gCommandList = nullptr;
+        }
+
+        if (gCommandAllocator)
+        {
+            gCommandAllocator->Release();
+            gCommandAllocator = nullptr;
+        }
+
+        if (gCommandQueue)
+        {
+            gCommandQueue->Release();
+            gCommandQueue = nullptr;
+        }
+
+        gSwapChain.Reset();
+
+        if (gFence)
+        {
+            gFence->Release();
+            gFence = nullptr;
+        }
+
+        // Release device (keep this last)
+        gDevice.Reset();
+    
+    #if MN_DEBUG
+        // Validate everything has been freed
+        ReportLiveD3D12Objects();
+    #endif
+
+        gFeatureLevelStr = std::wstring();
+        gFenceVal = 0;
+        gRTVSize = 0;
+        gDSVSize = 0;
+        gCBVSize = 0;
+        gMSAAQuality = 0;
+        CurrentBackBuffer = 0;
+        gHwnd = nullptr;
+
+        return true;
     }
 
 #undef CHECK_SUCCESS

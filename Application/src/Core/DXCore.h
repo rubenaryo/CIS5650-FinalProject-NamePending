@@ -35,7 +35,8 @@ namespace Muon
 	bool CheckFeatureLevel(ID3D12Device* pDevice, D3D_FEATURE_LEVEL& outHighestLevel, std::wstring& outHighestLevelStr);
 	bool UpdateTitleBar(uint32_t fps, uint32_t frameCount);
 
-	bool Initialize(HWND hwnd, int width, int height);
+	bool InitDX12(HWND hwnd, int width, int height);
+	bool DestroyDX12();
 }
 
 #endif

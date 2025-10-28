@@ -28,7 +28,7 @@ bool Game::Init(HWND window, int width, int height)
 {
     using namespace Muon;
 
-    bool success = Muon::Initialize(window, width, height);
+    bool success = Muon::InitDX12(window, width, height);
     ResourceCodex::Init();
 
     ResourceCodex& codex = ResourceCodex::GetSingleton();
@@ -127,6 +127,12 @@ Game::~Game()
     
     delete mpInput;
     mpInput = nullptr;   
+
+    mTriangle.Release();
+    mPSO.Destroy();
+
+    Muon::ResourceCodex::Destroy();
+    Muon::DestroyDX12();
 }
 
 #pragma region Game State Callbacks

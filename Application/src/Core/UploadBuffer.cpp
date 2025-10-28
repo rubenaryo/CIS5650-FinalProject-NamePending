@@ -65,10 +65,9 @@ void UploadBuffer::TryDestroy()
 		Unmap(0, mBufferSize);
 
 	if (mpResource)
-		mpResource->Release();
+		mpResource.Reset();
 
-	mpResource = nullptr;
-	mName.clear();
+	mName = std::wstring();
 	mBufferSize = 0;
 	mOffset = 0;
 }

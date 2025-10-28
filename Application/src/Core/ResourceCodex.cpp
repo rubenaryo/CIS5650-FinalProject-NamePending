@@ -60,6 +60,7 @@ void ResourceCodex::Destroy()
         Mesh& mesh = m.second;
         mesh.Release();
     }
+    codexInstance.mMeshStagingBuffer.TryDestroy();
 
     for (auto& s : codexInstance.mVertexShaders)
     {

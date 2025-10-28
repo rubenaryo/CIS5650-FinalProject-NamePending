@@ -25,6 +25,7 @@ public:
 	ID3D12PipelineState* GetPipelineState() const { return mpPipelineState; }
 
 	bool Bind() const;
+	void Destroy();
 
 protected:
 	const ID3D12RootSignature* mpRootSignature = nullptr;
