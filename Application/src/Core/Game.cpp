@@ -24,7 +24,7 @@ Game::Game() :
     mTimer.SetFixedTimeStep(false);
 }
 
-bool Game::InitDX12(HWND window, int width, int height)
+bool Game::Init(HWND window, int width, int height)
 {
     using namespace Muon;
 
@@ -130,14 +130,6 @@ Game::~Game()
 }
 
 #pragma region Game State Callbacks
-void Game::OnDeviceLost()
-{
-}
-
-void Game::OnDeviceRestored()
-{
-}
-
 void Game::OnActivated()
 {
 }

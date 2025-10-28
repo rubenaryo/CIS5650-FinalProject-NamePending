@@ -28,15 +28,10 @@ public:
     Game();
     ~Game();
 
-    bool InitDX12(HWND window, int width, int height);
+    bool Init(HWND window, int width, int height);
 
     // Main Game Loop
     void Frame();
-
-    // Implementation of IDeviceNotify
-    // Handles sudden loss of device
-    virtual void OnDeviceLost();
-    virtual void OnDeviceRestored();
 
     // Callbacks for windows messages
     void OnActivated();
