@@ -62,7 +62,7 @@ namespace Muon
     HWND gHwnd;
 
     D3D_FEATURE_LEVEL gFeatureLevel;
-    std::wstring gFeatureLevelStr(L"Direct3D ???");
+    const wchar_t* gFeatureLevelStr = nullptr;
 
     // TODO: Move these to the main application and generalize them. 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> gRootSig;
@@ -473,14 +473,14 @@ namespace Muon
     bool LoadShaders(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList, ID3D12RootSignature* pRootSignature, ID3D12PipelineState** out_state)
     {
         // Load simple shaders from file
-        static const std::wstring VS_PATH = SHADERPATHW "SimpleVS.cso";
-        static const std::wstring PS_PATH = SHADERPATHW "SimplePS.cso";
+        const wchar_t* VS_PATH = SHADERPATHW "SimpleVS.cso";
+        const wchar_t* PS_PATH = SHADERPATHW "SimplePS.cso";
         Microsoft::WRL::ComPtr<ID3DBlob> pVSBlob;
         Microsoft::WRL::ComPtr<ID3DBlob> pPSBlob;
-        HRESULT hr = D3DReadFileToBlob(VS_PATH.c_str(), pVSBlob.GetAddressOf());
+        HRESULT hr = D3DReadFileToBlob(VS_PATH, pVSBlob.GetAddressOf());
         COM_EXCEPT(hr);
 
-        hr = D3DReadFileToBlob(PS_PATH.c_str(), pPSBlob.GetAddressOf());
+        hr = D3DReadFileToBlob(PS_PATH, pPSBlob.GetAddressOf());
         COM_EXCEPT(hr);
 
         D3D12_INPUT_ELEMENT_DESC inputElementDescs[] =
@@ -615,7 +615,7 @@ namespace Muon
         return true;
     }
 
-    bool CheckFeatureLevel(ID3D12Device* pDevice, D3D_FEATURE_LEVEL& outHighestLevel, std::wstring& outHighestLevelStr)
+    bool CheckFeatureLevel(ID3D12Device* pDevice, D3D_FEATURE_LEVEL& outHighestLevel, const wchar_t** ppFeatureLevelStr)
     {
         const D3D_FEATURE_LEVEL featureLevelsList[] = {
             D3D_FEATURE_LEVEL_12_2,
@@ -635,7 +635,7 @@ namespace Muon
             return false;
 
         outHighestLevel = featureLevels.MaxSupportedFeatureLevel;
-        outHighestLevelStr.assign(GetDirect3DNameForFeatureLevel(outHighestLevel));
+        *ppFeatureLevelStr = GetDirect3DNameForFeatureLevel(outHighestLevel);
         return true;
     }
 
@@ -699,7 +699,7 @@ namespace Muon
         success &= GetDescriptorSizes(GetDevice(), &gRTVSize, &gDSVSize, &gCBVSize);
         CHECK_SUCCESS(success, "Error: Failed to get descriptor sizes!\n");
 
-        success &= CheckFeatureLevel(GetDevice(), gFeatureLevel, gFeatureLevelStr);
+        success &= CheckFeatureLevel(GetDevice(), gFeatureLevel, &gFeatureLevelStr);
         CHECK_SUCCESS(success, "Error: Failed to get feature level!\n");
 
         //success &= DetermineMSAAQuality(GetDevice(), &gMSAAQuality);
@@ -797,7 +797,7 @@ namespace Muon
     #endif
 
         // Reset global state
-        gFeatureLevelStr = std::wstring();
+        gFeatureLevelStr = nullptr;
         gFenceVal = 0;
         gRTVSize = 0;
         gDSVSize = 0;
