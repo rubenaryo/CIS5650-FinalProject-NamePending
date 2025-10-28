@@ -112,7 +112,7 @@ bool GameWindow::InitGame(HWND hwnd, int width, int height)
     bool result = false;
     try
     {
-        result = m_Game.InitDX12(hwnd, width, height);
+        result = m_Game.Init(hwnd, width, height);
     }
     catch (std::exception const& e)
     {
@@ -121,7 +121,7 @@ bool GameWindow::InitGame(HWND hwnd, int width, int height)
     }
     return result;
 #else
-    return m_Game.InitDX12(hwnd, width, height);
+    return m_Game.Init(hwnd, width, height);
 #endif
 }
 
