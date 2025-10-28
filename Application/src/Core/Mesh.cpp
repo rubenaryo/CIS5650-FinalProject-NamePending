@@ -11,7 +11,7 @@ Description : Mesh initialization logic, for DX12
 #include <Utils/Utils.h>
 #include <d3dx12.h>
 
-namespace Renderer
+namespace Muon
 {
 
 // Creates a vertex/index buffer using the default heap, but does NOT populate it with initial data.

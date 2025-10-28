@@ -7,7 +7,8 @@
 
 #include <utility>
 
-namespace Renderer {
+namespace Muon
+{
 
 struct ShaderFactory final
 {

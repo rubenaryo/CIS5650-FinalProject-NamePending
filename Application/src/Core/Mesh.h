@@ -9,7 +9,7 @@ Description : Mesh stores the vertex,index buffers ready to be drawn by DirectX
 #include "DXCore.h"
 #include "Shader.h"
 
-namespace Renderer
+namespace Muon
 {
 struct Mesh
 {

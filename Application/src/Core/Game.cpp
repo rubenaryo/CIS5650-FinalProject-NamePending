@@ -26,7 +26,7 @@ Game::Game() :
 
 bool Game::InitDX12(HWND window, int width, int height)
 {
-    using namespace Renderer;
+    using namespace Muon;
 
     bool success = Muon::Initialize(window, width, height);
     ResourceCodex::Init();
@@ -62,7 +62,7 @@ bool Game::InitDX12(HWND window, int width, int height)
     Muon::ResetCommandList(mPSO.GetPipelineState());
     Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
     stagingBuffer.Map();
-    Renderer::MeshFactory::LoadAllMeshes(codex);
+    Muon::MeshFactory::LoadAllMeshes(codex);
     mTriangle.Init(triangleVertices, sizeof(triangleVertices), sizeof(Vertex), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
     stagingBuffer.Unmap(0, stagingBuffer.GetBufferSize());
     Muon::CloseCommandList();

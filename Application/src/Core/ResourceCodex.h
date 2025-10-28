@@ -15,14 +15,15 @@ Description : Loads and distributes all static resources (materials, textures, e
 
 #include <unordered_map>
 
-namespace Renderer {
-
+namespace Muon
+{
 struct MeshFactory;
 struct ShaderFactory;
 struct TextureFactory;
 }
 
-namespace Renderer {
+namespace Muon
+{
 
 typedef uint32_t id_type;
 typedef id_type ShaderID;

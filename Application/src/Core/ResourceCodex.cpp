@@ -15,8 +15,8 @@ Description : Master Resource Distributor
 
 #include "hash_util.h"
 
-namespace Renderer {
-
+namespace Muon
+{
 
 MeshID ResourceCodex::AddMeshFromFile(const char* fileName, const VertexBufferDescription* vertAttr)
 {

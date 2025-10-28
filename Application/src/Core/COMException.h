@@ -14,8 +14,8 @@ Description : Interface for custom COM Exception reporting
 #include <exception>
 
 // Putting this in the graphics namespace, since it's primarily meant to interface with DeviceResources
-namespace Renderer {
-
+namespace Muon
+{
 
 class COMException : public std::exception
 {

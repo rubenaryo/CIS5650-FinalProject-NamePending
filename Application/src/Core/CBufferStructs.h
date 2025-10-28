@@ -9,7 +9,7 @@ Description : Declation of structs used as constant buffers by various shaders
 #include <DirectXMath.h>
 #include <DirectXColors.h>
 
-namespace Renderer
+namespace Muon
 {
 
 struct alignas(16) cbCamera

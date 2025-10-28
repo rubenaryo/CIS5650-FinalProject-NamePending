@@ -14,7 +14,7 @@ helper macros for reaching certain paths
 #if defined(MN_DEBUG)
     #define COM_EXCEPT(hr) \
         if (FAILED(hr)) \
-            throw Renderer::COMException(__LINE__,__FILE__, hr);
+            throw Muon::COMException(__LINE__,__FILE__, hr);
 #else
     #define COM_EXCEPT(hr) hr
 #endif

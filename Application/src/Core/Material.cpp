@@ -8,7 +8,7 @@ Description : Implementation of custom material system
 #include <Core/PipelineState.h>
 #include <Core/Shader.h>
 
-namespace Renderer
+namespace Muon
 {
 
 ParameterDesc::ParameterDesc(const char* name, ParameterType type)

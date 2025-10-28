@@ -20,7 +20,7 @@ namespace Input
     class GameInput;
 }
 
-namespace Renderer
+namespace Muon
 {
 
 class Camera

@@ -12,7 +12,7 @@ This class encapsulates all app functionality
 #include <Core/Mesh.h>
 #include <Core/PipelineState.h>
 
-namespace Renderer
+namespace Muon
 {
 class Camera;
 }
@@ -60,10 +60,10 @@ private:
     Input::GameInput* mpInput;
 
     // Main Camera
-    Renderer::Camera* mpCamera;
+    Muon::Camera* mpCamera;
 
     // TEMP: For testing
-    Renderer::Mesh mTriangle;
+    Muon::Mesh mTriangle;
     Muon::GraphicsPipelineState mPSO;
     
     // Timer for the main game loop

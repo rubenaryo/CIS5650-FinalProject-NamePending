@@ -13,13 +13,14 @@ Description : Material class for shader information
 #include <unordered_map>
 #include <string>
 
-namespace Renderer
+namespace Muon
 {
 struct VertexShader;
 struct PixelShader;
 }
 
-namespace Renderer {
+namespace Muon
+{
 
 enum class TextureSlots : UINT
 {

@@ -8,7 +8,7 @@ Description : Implementations of Muon shader objects
 #include <Core/ThrowMacros.h>
 #include <Utils/Utils.h>
 
-namespace Renderer
+namespace Muon
 {
 
 static const char* kSemanticNames[] =

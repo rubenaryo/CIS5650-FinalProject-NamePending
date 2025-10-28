@@ -21,7 +21,8 @@
 #include <Utils/Utils.h>
 #include <unordered_map>
 
-namespace Renderer {
+namespace Muon
+{
 
 MeshID MeshFactory::CreateMesh(const char* fileName, const VertexBufferDescription* vertAttr, Mesh& out_mesh)
 {

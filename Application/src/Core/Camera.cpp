@@ -6,8 +6,8 @@ Description : Implementation of Camera Class
 #include "Camera.h"
 #include <DirectXMath.h>
 
-namespace Renderer {
-
+namespace Muon 
+{
 using namespace DirectX;
 
 Camera::Camera(XMFLOAT3& pos, float aspectRatio, float nearPlane, float farPlane) :

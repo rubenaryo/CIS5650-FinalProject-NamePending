@@ -13,7 +13,8 @@ Description : Wrapper for Vertex/Pixel/other shader code
 #include <wrl/client.h>
 #include <Core/DXCore.h>
 
-namespace Renderer {
+namespace Muon
+{
 
 #pragma region VertexShader Stuff
 typedef uint8_t semantic_t;
