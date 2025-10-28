@@ -28,7 +28,6 @@ private:
     bool m_Minimized = false;
     bool m_Fullscreen = false;
 
-    // Heap allocated game
-    Game* m_pGame;
+    Game m_Game;
 };
 #endif

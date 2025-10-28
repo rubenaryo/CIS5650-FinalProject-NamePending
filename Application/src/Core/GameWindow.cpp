@@ -10,13 +10,10 @@ Description : Implementation of Message Loop
 
 GameWindow::GameWindow()
 {
-    m_pGame = new Game();
 }
 
 GameWindow::~GameWindow()
 {
-    delete m_pGame;
-    m_pGame = nullptr;
 }
 
 LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -25,7 +22,7 @@ LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
     case WM_MOUSEMOVE:
         POINTS pt = MAKEPOINTS(lParam);
-        m_pGame->OnMouseMove(pt.x, pt.y);
+        m_Game.OnMouseMove(pt.x, pt.y);
         return 0;
 
     case WM_DESTROY:
@@ -42,7 +39,7 @@ LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                 // Set minimized flag, suspend the game
                 m_Minimized = true;
                 if (!m_Suspended)
-                    m_pGame->OnSuspending();
+                    m_Game.OnSuspending();
                 m_Suspended = true;
             }
         }
@@ -51,7 +48,7 @@ LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
             // Set maximized flag, resume the game
             m_Minimized = false;
             if (m_Suspended)
-                m_pGame->OnResuming();
+                m_Game.OnResuming();
             m_Suspended = false;
         }
         break;
@@ -63,7 +60,7 @@ LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
         m_ResizeMove = false;
         RECT rc;
         GetClientRect(m_hwnd, &rc);
-        m_pGame->OnResize(static_cast<int>(rc.right - rc.left), static_cast<int>(rc.bottom - rc.top));
+        m_Game.OnResize(static_cast<int>(rc.right - rc.left), static_cast<int>(rc.bottom - rc.top));
     }
     break;
     case WM_GETMINMAXINFO:
@@ -77,27 +74,25 @@ LRESULT GameWindow::HandleMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     break;
     case WM_ACTIVATEAPP:
-        if (m_pGame)
-        {
-            if (wParam)
-                m_pGame->OnActivated();
-            else
-                m_pGame->OnDeactivated();
-        }
+        if (wParam)
+            m_Game.OnActivated();
+        else
+            m_Game.OnDeactivated();
+
         break;
     case WM_POWERBROADCAST:
         switch (wParam)
         {
         case PBT_APMQUERYSUSPEND:
             if (!m_Suspended)
-                m_pGame->OnSuspending();
+                m_Game.OnSuspending();
             m_Suspended = true;
             return TRUE;
         case PBT_APMRESUMESUSPEND:
             if (!m_Minimized)
             {
                 if (m_Suspended)
-                    m_pGame->OnResuming();
+                    m_Game.OnResuming();
                 m_Suspended = false;
             }
             return TRUE;
@@ -117,7 +112,7 @@ bool GameWindow::InitGame(HWND hwnd, int width, int height)
     bool result = false;
     try
     {
-        result = m_pGame->InitDX12(hwnd, width, height);
+        result = m_Game.InitDX12(hwnd, width, height);
     }
     catch (std::exception const& e)
     {
@@ -126,7 +121,7 @@ bool GameWindow::InitGame(HWND hwnd, int width, int height)
     }
     return result;
 #else
-        return m_pGame->InitDX12(hwnd, width, height);
+    return m_Game.InitDX12(hwnd, width, height);
 #endif
 }
 
@@ -144,6 +139,6 @@ void GameWindow::RunGame()
         }
 
         // Process one gameplay frame
-        m_pGame->Frame();
+        m_Game.Frame();
     }
 }
