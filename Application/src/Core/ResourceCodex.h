@@ -48,7 +48,7 @@ public:
     static void Init();
     static void Destroy();
 
-    inline static ResourceCodex& GetSingleton() { static ResourceCodex codexInstance; return codexInstance; }
+    inline static ResourceCodex& GetSingleton();
 
     //const Mesh* GetMesh(MeshID UID) const;
     const Mesh* GetMesh(MeshID UID) const;
@@ -73,9 +73,6 @@ private:
 
     // An intermediate upload buffer used for uploading vertex/index data to the GPU
     Muon::UploadBuffer mMeshStagingBuffer;
-
-    // Singleton stuff
-    static ResourceCodex* CodexInstance;
 
 private:
     friend struct TextureFactory;

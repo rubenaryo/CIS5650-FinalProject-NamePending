@@ -21,13 +21,20 @@ namespace Input {
     // Release all dynamic memory
     InputSystem::~InputSystem()
     {
-        // Release keyMap and clear
-        for (auto pair : mKeyMap)
-            delete pair.second;
-        mKeyMap.clear();
+    }
 
+    void InputSystem::Destroy()
+    {
         // No need to delete dynamic memory from activeKeyMap, it's already deleted in keymap*
         mActiveKeyMap.clear();
+
+        // Release keyMap and clear
+        for (auto pair : mKeyMap)
+        {
+            if (pair.second)
+                delete pair.second;
+        }
+        mKeyMap.clear();
     }
 
     // Stores previous/current keymappings (from windows)

@@ -18,8 +18,8 @@ Description : Implementation of Game.h
 #include <Utils/Utils.h>
 
 Game::Game() :
-    mpInput(new Input::GameInput()),
-    mpCamera(nullptr)
+    mInput(),
+    mCamera()
 {
     mTimer.SetFixedTimeStep(false);
 }
@@ -37,7 +37,7 @@ bool Game::Init(HWND window, int width, int height)
     const VertexShader* pVS = codex.GetVertexShader(kSimpleVSID);
     const PixelShader* pPS = codex.GetPixelShader(kSimplePSID);
 
-    mpCamera = new Camera(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
+    mCamera.Init(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
 
     // Describe and create the graphics pipeline state object (PSO).
     mPSO.SetRootSignature(Muon::GetRootSignature());
@@ -86,8 +86,8 @@ void Game::Frame()
 void Game::Update(Muon::StepTimer const& timer)
 {
     float elapsedTime = float(timer.GetElapsedSeconds());
-    mpInput->Frame(elapsedTime, mpCamera);
-    mpCamera->UpdateView();
+    mInput.Frame(elapsedTime, &mCamera);
+    mCamera.UpdateView();
 }
 
 void Game::Render()
@@ -117,19 +117,15 @@ void Game::CreateDeviceDependentResources()
 void Game::CreateWindowSizeDependentResources(int newWidth, int newHeight)
 {
     float aspectRatio = (float)newWidth / (float)newHeight;
-    mpCamera->UpdateProjection(aspectRatio);
+    mCamera.UpdateProjection(aspectRatio);
 }
 
 Game::~Game()
-{
-    delete mpCamera;
-    mpCamera = nullptr;
-    
-    delete mpInput;
-    mpInput = nullptr;   
-
+{ 
     mTriangle.Release();
     mPSO.Destroy();
+    mCamera.Destroy();
+    mInput.Destroy();
 
     Muon::ResourceCodex::Destroy();
     Muon::DestroyDX12();
@@ -178,6 +174,6 @@ void Game::OnResize(int newWidth, int newHeight)
 
 void Game::OnMouseMove(short newX, short newY)
 {
-    mpInput->OnMouseMove(newX, newY);
+    mInput.OnMouseMove(newX, newY);
 }
 #pragma endregion

@@ -7,20 +7,12 @@ This class encapsulates all app functionality
 #ifndef GAME_H
 #define GAME_H
 
-#include "StepTimer.h"
-
+#include <Core/Camera.h>
 #include <Core/Mesh.h>
 #include <Core/PipelineState.h>
+#include <Core/StepTimer.h>
 
-namespace Muon
-{
-class Camera;
-}
-
-namespace Input
-{
-class GameInput;
-}
+#include <Input/GameInput.h>
 
 class Game
 {
@@ -52,10 +44,10 @@ private:
     void CreateWindowSizeDependentResources(int newWidth, int newHeight);
 
     // Input Management
-    Input::GameInput* mpInput;
+    Input::GameInput mInput;
 
     // Main Camera
-    Muon::Camera* mpCamera;
+    Muon::Camera mCamera;
 
     // TEMP: For testing
     Muon::Mesh mTriangle;

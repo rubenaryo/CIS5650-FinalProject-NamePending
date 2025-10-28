@@ -17,13 +17,14 @@ Description : Master Resource Distributor
 
 namespace Muon
 {
+static ResourceCodex* gCodexInstance = nullptr;
 
 MeshID ResourceCodex::AddMeshFromFile(const char* fileName, const VertexBufferDescription* vertAttr)
 {
     ResourceCodex& codexInstance = GetSingleton();
 
     Mesh mesh;
-    //MeshID id = MeshFactory::CreateMesh(fileName, vertAttr, pDevice, &mesh);
+
     MeshID id = MeshFactory::CreateMesh(fileName, vertAttr, mesh);
     auto& hashtable = codexInstance.mMeshMap;
     
@@ -41,11 +42,22 @@ MeshID ResourceCodex::AddMeshFromFile(const char* fileName, const VertexBufferDe
     return id;
 }
 
+ResourceCodex& ResourceCodex::GetSingleton()
+{
+    return *gCodexInstance;
+}
+
 void ResourceCodex::Init()
 {
-    ResourceCodex& codexInstance = GetSingleton();
-    codexInstance.mMeshStagingBuffer.Create(L"Mesh Staging Buffer", 64 * 1024 * 1024);
-    ShaderFactory::LoadAllShaders(codexInstance);
+    if (gCodexInstance)
+    {
+        Muon::Print("ERROR: Tried to initialize already initialized ResourceCodex!\n");
+        return;
+    }
+
+    gCodexInstance = new ResourceCodex();
+    gCodexInstance->mMeshStagingBuffer.Create(L"Mesh Staging Buffer", 64 * 1024 * 1024);
+    ShaderFactory::LoadAllShaders(*gCodexInstance);
 
     //TextureFactory::LoadAllTextures(codexInstance);
     //MaterialFactory::CreateAllMaterials(codexInstance);
@@ -53,26 +65,33 @@ void ResourceCodex::Init()
 
 void ResourceCodex::Destroy()
 {
-    ResourceCodex& codexInstance = GetSingleton();
-
-    for (auto& m : codexInstance.mMeshMap)
+    for (auto& m : gCodexInstance->mMeshMap)
     {
         Mesh& mesh = m.second;
         mesh.Release();
     }
-    codexInstance.mMeshStagingBuffer.TryDestroy();
+    gCodexInstance->mMeshMap.clear();
 
-    for (auto& s : codexInstance.mVertexShaders)
+    gCodexInstance->mMeshStagingBuffer.TryDestroy();
+
+    for (auto& s : gCodexInstance->mVertexShaders)
     {
         VertexShader& vs = s.second;
         vs.Release();
     }
+    gCodexInstance->mVertexShaders.clear();
 
-    for (auto& s : codexInstance.mPixelShaders)
+    for (auto& s : gCodexInstance->mPixelShaders)
     {
         PixelShader& ps = s.second;
         ps.Release();
     }
+    gCodexInstance->mPixelShaders.clear();
+
+    gCodexInstance->mMaterialTypeMap.clear();
+
+    delete gCodexInstance;
+    gCodexInstance = nullptr;
 
     // TODO: DX12-ify this.
     //for (auto const& t : codexInstance.mTextureMap)

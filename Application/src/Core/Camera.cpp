@@ -10,15 +10,31 @@ namespace Muon
 {
 using namespace DirectX;
 
-Camera::Camera(XMFLOAT3& pos, float aspectRatio, float nearPlane, float farPlane) :
-    mNear(nearPlane),
-    mFar(farPlane),
+Camera::Camera() :
+    mNear(0.1f),
+    mFar(100.0f),
     mSensitivity(0.0f),
     mForward(DirectX::XMVectorSet(1.f, 0.f, 0.f, 0.f)),
     mUp(DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f)),
     mRight(DirectX::XMVectorSet(1.f, 0.f, 0.f, 0.f)),
     mCameraMode(CM_PERSPECTIVE)
 {   
+    mView = XMMatrixIdentity();
+    mProjection = XMMatrixIdentity();
+    mViewProjection = XMFLOAT4X4();
+    mPosition = XMVectorZero();
+    mTarget = XMVectorZero();
+}
+
+Camera::~Camera()
+{
+}
+
+void Camera::Init(DirectX::XMFLOAT3& pos, float aspectRatio, float nearPlane, float farPlane)
+{
+    mNear = nearPlane;
+    mFar = farPlane;
+
     mPosition = XMLoadFloat3(&pos);
     mTarget = XMVectorZero();
 
@@ -48,8 +64,9 @@ Camera::Camera(XMFLOAT3& pos, float aspectRatio, float nearPlane, float farPlane
     UpdateProjection(aspectRatio);
 }
 
-Camera::~Camera()
+void Camera::Destroy()
 {
+    mConstantBuffer.TryDestroy();
 }
 
 void Camera::UpdateView()

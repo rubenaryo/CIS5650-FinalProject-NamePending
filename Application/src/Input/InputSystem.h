@@ -47,6 +47,8 @@ namespace Input {
         InputSystem();
         virtual ~InputSystem();
 
+        void Destroy();
+
         std::unordered_map<GameCommands, Chord*> mActiveKeyMap;
 
         // Main "Update method" for input system

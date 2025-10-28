@@ -34,16 +34,15 @@ class Camera
 friend class Input::GameInput;
 
 public:
-    Camera(DirectX::XMFLOAT3& pos, float aspectRatio, float near, float far);
-    Camera() = delete;
+    Camera();
     ~Camera();
 
 public:
-    // Updates Camera's View Matrix
-    void UpdateView(); // DX12
+    void Init(DirectX::XMFLOAT3& pos, float aspectRatio, float nearPlane, float farPlane);
+    void Destroy();
 
-    // Updates Camera's Projection Matrix
-    void UpdateProjection(float aspectRatio); // DX12
+    void UpdateView();
+    void UpdateProjection(float aspectRatio);
 
     DirectX::XMMATRIX   GetView()           const  { return mView;         }
     DirectX::XMMATRIX   GetProjection()     const  { return mProjection;   }
