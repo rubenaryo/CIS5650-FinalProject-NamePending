@@ -1,6 +1,6 @@
 APP_NAME = "Application"
 
-workspace "Muon"
+workspace (APP_NAME)
     architecture "x64"
     startproject (APP_NAME)
 
