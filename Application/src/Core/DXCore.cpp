@@ -517,9 +517,10 @@ namespace Muon
     {
         ID3D12CommandAllocator* pAllocator = GetCommandAllocator();
         ID3D12GraphicsCommandList* pCommandList = GetCommandList();
-
         if (!pAllocator || !pCommandList)
             return false;
+
+        FlushCommandQueue();
 
         HRESULT hr = pAllocator->Reset();
         COM_EXCEPT(hr);
