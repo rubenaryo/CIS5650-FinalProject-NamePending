@@ -10,17 +10,17 @@ Description : Utility functions
 
 namespace Muon
 {
-	inline void MUON_API Print(const char* str)
+	void Print(const char* str)
 	{
 		OutputDebugStringA(str);
 	}
 
-	inline void MUON_API Print(const wchar_t* str)
+	void Print(const wchar_t* str)
 	{
 		OutputDebugString(str);
 	}
 
-	inline void MUON_API Printf(const char* format, ...)
+	void Printf(const char* format, ...)
 	{
 		char buffer[256];
 		va_list ap;
@@ -30,7 +30,7 @@ namespace Muon
 		Print(buffer);
 	}
 
-	inline void MUON_API Printf(const wchar_t* format, ...)
+	void Printf(const wchar_t* format, ...)
 	{
 		wchar_t buffer[256];
 		va_list ap;
@@ -40,7 +40,7 @@ namespace Muon
 		Print(buffer);
 	}
 
-	inline UINT MUON_API AlignToBoundary(UINT size, UINT alignment)
+	UINT AlignToBoundary(UINT size, UINT alignment)
 	{
 		return (size + (alignment - 1)) & ~(alignment - 1);
 	}

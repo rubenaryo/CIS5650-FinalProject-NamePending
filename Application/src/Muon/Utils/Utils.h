@@ -10,13 +10,13 @@ Description : Utility functions
 
 namespace Muon
 {
-	inline void MUON_API Print(const char* str);
-	inline void MUON_API Print(const wchar_t* str);
-	inline void MUON_API Printf(const char* format, ...);
-	inline void MUON_API Printf(const wchar_t* format, ...);
+	void Print(const char* str);
+	void Print(const wchar_t* str);
+	void Printf(const char* format, ...);
+	void Printf(const wchar_t* format, ...);
 
 	// Aligns a size or memory offset to be a multiple of alignment
-	inline UINT MUON_API AlignToBoundary(UINT size, UINT alignment);
+	UINT AlignToBoundary(UINT size, UINT alignment);
 }
 
 #endif

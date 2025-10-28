@@ -13,7 +13,7 @@ Description : Game window header
 namespace Core
 {
     // A derived GameWindow class
-    class MUON_API GameWindow : public BaseWindow<GameWindow>
+    class GameWindow : public BaseWindow<GameWindow>
     {
     public:
         GameWindow();
