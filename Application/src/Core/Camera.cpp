@@ -113,6 +113,11 @@ void Camera::UpdateProjection(float aspectRatio)
     }
 }
 
+void Camera::Bind(ID3D12GraphicsCommandList* pCommandList) const
+{
+    pCommandList->SetGraphicsRootConstantBufferView(0, mConstantBuffer.GetGPUVirtualAddress());
+}
+
 void Camera::GetPosition3A(XMFLOAT3A* out_pos) const
 {
     XMStoreFloat3A(out_pos, mPosition);
@@ -158,8 +163,11 @@ void Camera::Rotate(XMVECTOR quatRotation)
 
 void Camera::UpdateConstantBuffer()
 {
+    DirectX::XMMATRIX viewProj = XMMatrixMultiply(mView, mProjection);
     cbCamera cb;
-    XMStoreFloat4x4(&cb.viewProjection, XMMatrixMultiply(mView, mProjection));
+    XMStoreFloat4x4(&cb.viewProj, viewProj);
+    XMStoreFloat4x4(&cb.view, mView);
+    XMStoreFloat4x4(&cb.proj, mProjection);
 
     void* pMappedMemory = mConstantBuffer.Map();
     memcpy(pMappedMemory, &cb, mConstantBuffer.GetBufferSize());

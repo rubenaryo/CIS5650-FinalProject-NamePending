@@ -343,7 +343,7 @@ bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
             return false;
         }
 
-        pbr->SetRootSignature(Muon::GetRootSignature());
+        //pbr->SetRootSignature(Muon::GetRootSignature());
         pbr->SetVertexShader(*pPhongVS);
         pbr->SetPixelShader(*pPhongPS);
 

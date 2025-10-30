@@ -12,9 +12,23 @@ Description : Declation of structs used as constant buffers by various shaders
 namespace Muon
 {
 
+enum VSBindSlots
+{
+    VS_CAMERA_SLOT = 10,
+    VS_ENTITY_SLOT = 11
+};
+
+enum PSBindSlots
+{
+    PS_LIGHTS_SLOT = 10,
+    PS_MATERIAL_SLOT = 11
+};
+
 struct alignas(16) cbCamera
 {
-    DirectX::XMFLOAT4X4 viewProjection;
+    DirectX::XMFLOAT4X4 view;
+    DirectX::XMFLOAT4X4 proj;
+    DirectX::XMFLOAT4X4 viewProj;
 };
 
 struct alignas(16) cbPerEntity

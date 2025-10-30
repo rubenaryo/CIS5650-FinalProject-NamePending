@@ -48,7 +48,7 @@ public:
     static void Init();
     static void Destroy();
 
-    inline static ResourceCodex& GetSingleton();
+    static ResourceCodex& GetSingleton();
 
     //const Mesh* GetMesh(MeshID UID) const;
     const Mesh* GetMesh(MeshID UID) const;

@@ -51,7 +51,11 @@ private:
 
     // TEMP: For testing
     Muon::Mesh mTriangle;
+    Muon::Mesh mCube;
+
+    Muon::UploadBuffer mWorldMatrixBuffer;
     Muon::GraphicsPipelineState mPSO;
+    Muon::GraphicsPipelineState mPhongPSO;
     
     // Timer for the main game loop
     Muon::StepTimer mTimer;

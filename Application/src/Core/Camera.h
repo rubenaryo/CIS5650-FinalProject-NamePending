@@ -44,6 +44,8 @@ public:
     void UpdateView();
     void UpdateProjection(float aspectRatio);
 
+    void Bind(ID3D12GraphicsCommandList* pCommandList) const;
+
     DirectX::XMMATRIX   GetView()           const  { return mView;         }
     DirectX::XMMATRIX   GetProjection()     const  { return mProjection;   }
     float               GetSensitivity()    const  { return mSensitivity;  }
@@ -84,7 +86,7 @@ private: // For GameInput only
     void MoveAlongAxis(float dist, DirectX::XMVECTOR axis); // Assumes normalized axis
     void Rotate(DirectX::XMVECTOR quatRotation);
     
-    void UpdateConstantBuffer(); // DX12
+    void UpdateConstantBuffer();
 };
 }
 

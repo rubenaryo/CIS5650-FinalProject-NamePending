@@ -40,7 +40,7 @@ void MaterialType::SetPixelShader(const PixelShader& ps)
 
 void MaterialType::SetRootSignature(ID3D12RootSignature* pRootSig)
 {
-	mPipelineState.SetRootSignature(pRootSig);
+	//mPipelineState.SetRootSignature(pRootSig);
 }
 
 // Added in-order, and it matters

@@ -22,7 +22,8 @@ namespace Muon
 	ID3D12GraphicsCommandList* GetCommandList();
 	ID3D12CommandAllocator* GetCommandAllocator();
 	ID3D12Fence* GetFence();
-	ID3D12RootSignature* GetRootSignature();
+	ID3D12RootSignature** GetRootSignatureAddr();
+	ID3D12RootSignature** GetPhongRootSignatureAddr();
 
 	bool ResetCommandList(ID3D12PipelineState* pInitialPipelineState);
 	bool CloseCommandList();

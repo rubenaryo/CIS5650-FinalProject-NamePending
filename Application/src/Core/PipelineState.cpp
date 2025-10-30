@@ -18,6 +18,7 @@ bool PipelineState::Bind() const
     if (!pCommandList || !this->GetPipelineState())
         return false;
 
+    pCommandList->SetGraphicsRootSignature(this->GetRootSignature());
     pCommandList->SetPipelineState(this->GetPipelineState());
     return true;
 }
@@ -43,10 +44,10 @@ GraphicsPipelineState::GraphicsPipelineState()
     mDesc.SampleDesc.Count = 1;
 }
 
-void GraphicsPipelineState::SetRootSignature(ID3D12RootSignature* pRootSig)
+void GraphicsPipelineState::SetRootSignature(ID3D12RootSignature** ppRootSig)
 {
-    PipelineState::SetRootSignature(pRootSig);
-    mDesc.pRootSignature = pRootSig;
+    PipelineState::SetRootSignature(ppRootSig);
+    mDesc.pRootSignature = this->GetRootSignature();
 }
 
 void GraphicsPipelineState::SetVertexShader(const Muon::VertexShader& vs)

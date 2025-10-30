@@ -31,6 +31,11 @@ struct UploadBuffer
     size_t GetBufferSize() const { return mBufferSize; }
     ID3D12Resource* GetResource() { return mpResource.Get(); }
 
+    D3D12_GPU_VIRTUAL_ADDRESS GetGPUVirtualAddress() const
+    {
+        return mpResource->GetGPUVirtualAddress();
+    }
+
 private:
     Microsoft::WRL::ComPtr<ID3D12Resource> mpResource;
     UINT8* mMappedPtr = nullptr;

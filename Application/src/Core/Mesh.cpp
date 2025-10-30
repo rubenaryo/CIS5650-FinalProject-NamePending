@@ -177,11 +177,13 @@ bool Mesh::PopulateBuffers(void* vertexData, UINT vertexDataSize, UINT vertexStr
     return true;
 }
 
-bool Mesh::Draw(ID3D12GraphicsCommandList* pCommandList)
+bool Mesh::Draw(ID3D12GraphicsCommandList* pCommandList) const
 {
     pCommandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     pCommandList->IASetVertexBuffers(0, 1, &VertexBufferView);
-    pCommandList->DrawInstanced(3, 1, 0, 0);
+    pCommandList->IASetIndexBuffer(&IndexBufferView);
+    //pCommandList->DrawInstanced(3, 1, 0, 0);
+    pCommandList->DrawIndexedInstanced(IndexCount, 1, 0, 0, 0);
 
     return true;
 }

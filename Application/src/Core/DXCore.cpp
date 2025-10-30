@@ -9,6 +9,7 @@ or "Introduction to 3D Game Programming with DirectX 12" by Frank Luna
 #include <Utils/Utils.h>
 #include <Core/DXCore.h>
 #include <Core/ThrowMacros.h>
+#include <Core/CBufferStructs.h>
 
 #include <d3dx12.h>
 #include <d3d12.h>
@@ -66,6 +67,7 @@ namespace Muon
 
     // TODO: Move these to the main application and generalize them. 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> gRootSig;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> gPhongRootSig;
 
     /////////////////////////////////////////////////////////////////////
     // Accessors
@@ -73,6 +75,9 @@ namespace Muon
     ID3D12Device* GetDevice() { return gDevice.Get(); }
     ID3D12Fence* GetFence() { return gFence.Get(); }
     ID3D12RootSignature* GetRootSignature() { return gRootSig.Get(); }
+    ID3D12RootSignature** GetRootSignatureAddr() { return gRootSig.GetAddressOf(); }
+    ID3D12RootSignature* GetPhongRootSignature() { return gPhongRootSig.Get(); }
+    ID3D12RootSignature** GetPhongRootSignatureAddr() { return gPhongRootSig.GetAddressOf(); }
     UINT GetRTVDescriptorSize() { return gRTVSize; }
     UINT GetDSVDescriptorSize() { return gDSVSize; }
     UINT GetCBVDescriptorSize() { return gCBVSize; }
@@ -470,6 +475,59 @@ namespace Muon
         return SUCCEEDED(hr);
     }
 
+    bool CreatePhongRootSig(ID3D12Device* pDevice, Microsoft::WRL::ComPtr<ID3D12RootSignature>& out_sig)
+    {
+        // Define descriptor ranges
+        CD3DX12_DESCRIPTOR_RANGE1 srvRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, 0); // t0
+        CD3DX12_DESCRIPTOR_RANGE1 samplerRange(D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER, 1, 0); // s0
+
+        // Define root parameters
+        CD3DX12_ROOT_PARAMETER1 rootParameters[2] = {};
+
+        // Camera slot (b10)
+        rootParameters[0].InitAsConstantBufferView(VS_CAMERA_SLOT, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_VERTEX);
+        
+        // Entity slot (b11)
+        rootParameters[1].InitAsConstantBufferView(VS_ENTITY_SLOT, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_VERTEX);
+
+        // Light slot (b10)
+        //rootParameters[2].InitAsConstantBufferView(PS_LIGHTS_SLOT, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
+        //
+        //// Material slot (b11)
+        //rootParameters[3].InitAsConstantBufferView(PS_MATERIAL_SLOT, 0, D3D12_ROOT_DESCRIPTOR_FLAG_NONE, D3D12_SHADER_VISIBILITY_PIXEL);
+        //
+        //// Texture (t0)
+        //rootParameters[4].InitAsDescriptorTable(1, &srvRange, D3D12_SHADER_VISIBILITY_PIXEL);
+        //
+        //// Sampler (s0)
+        //rootParameters[5].InitAsDescriptorTable(1, &samplerRange, D3D12_SHADER_VISIBILITY_PIXEL);
+
+        // Create root signature description
+        CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDesc;
+        rootSignatureDesc.Init_1_1(_countof(rootParameters), rootParameters, 0, nullptr,
+            D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT);
+
+        Microsoft::WRL::ComPtr<ID3DBlob> signature;
+        Microsoft::WRL::ComPtr<ID3DBlob> error;
+
+        HRESULT hr = D3DX12SerializeVersionedRootSignature(&rootSignatureDesc, D3D_ROOT_SIGNATURE_VERSION_1_1, &signature, &error);
+
+        if (FAILED(hr))
+        {
+            if (error)
+            {
+                OutputDebugStringA((char*)error->GetBufferPointer());
+            }
+            return false;
+        }
+
+        hr = pDevice->CreateRootSignature(0, signature->GetBufferPointer(), signature->GetBufferSize(),
+            IID_PPV_ARGS(out_sig.GetAddressOf()));
+        COM_EXCEPT(hr);
+
+        return SUCCEEDED(hr);
+    }
+
     bool LoadShaders(ID3D12Device* pDevice, ID3D12GraphicsCommandList* pCommandList, ID3D12RootSignature* pRootSignature, ID3D12PipelineState** out_state)
     {
         // Load simple shaders from file
@@ -541,7 +599,7 @@ namespace Muon
     {
         ID3D12GraphicsCommandList* pCommandList = GetCommandList();
 
-        pCommandList->SetGraphicsRootSignature(gRootSig.Get());
+        //pCommandList->SetGraphicsRootSignature(gRootSig.Get());
         pCommandList->RSSetViewports(1, &gViewport);
         pCommandList->RSSetScissorRects(1, &gScissorRect);
 
@@ -734,6 +792,9 @@ namespace Muon
         success &= CreateRootSig(GetDevice(), gRootSig);
         CHECK_SUCCESS(success, "Error: Failed to create root signature.\n");
 
+        success &= CreatePhongRootSig(GetDevice(), gPhongRootSig);
+        CHECK_SUCCESS(success, "Error: Failed to create phong root signature.\n");
+
         // We've written a bunch of commands, close the list and execute it.
         hr = GetCommandList()->Close();
         COM_EXCEPT(hr);
@@ -785,6 +846,7 @@ namespace Muon
         gRTVHeap.Reset();
         gDSVHeap.Reset();
         gRootSig.Reset();
+        gPhongRootSig.Reset();
         gCommandList.Reset();
         gCommandAllocator.Reset();
         gCommandQueue.Reset();

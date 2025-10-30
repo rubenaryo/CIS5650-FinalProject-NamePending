@@ -34,21 +34,98 @@ bool Game::Init(HWND window, int width, int height)
     ResourceCodex& codex = ResourceCodex::GetSingleton();
     const ShaderID kSimpleVSID = fnv1a(L"SimpleVS.cso");
     const ShaderID kSimplePSID = fnv1a(L"SimplePS.cso");
+    const ShaderID kPhongVSID = fnv1a(L"PhongVS.cso");
+    const ShaderID kPhongPSID = fnv1a(L"PhongPS.cso");
     const VertexShader* pVS = codex.GetVertexShader(kSimpleVSID);
     const PixelShader* pPS = codex.GetPixelShader(kSimplePSID);
+    
+    const VertexShader* pPhongVS = codex.GetVertexShader(kPhongVSID);
+    const PixelShader* pPhongPS = codex.GetPixelShader(kPhongPSID);
 
-    mCamera.Init(DirectX::XMFLOAT3(-5.0, 5.0, -5.0), width / (float)height, 0.1f, 100.0f);
+    mCamera.Init(DirectX::XMFLOAT3(5.0, 5.0, 5.0), width / (float)height, 0.1f, 1000.0f);
 
     // Describe and create the graphics pipeline state object (PSO).
-    mPSO.SetRootSignature(Muon::GetRootSignature());
+    mPSO.SetRootSignature(Muon::GetRootSignatureAddr());
     mPSO.SetVertexShader(*pVS);
     mPSO.SetPixelShader(*pPS);
-    success = mPSO.Generate();
+    success &= mPSO.Generate();
+
+    // Describe a 3d pso
+    mPhongPSO.SetRootSignature(Muon::GetPhongRootSignatureAddr());
+    mPhongPSO.SetVertexShader(*pPhongVS);
+    mPhongPSO.SetPixelShader(*pPhongPS);
+    success &= mPhongPSO.Generate();
 
     struct Vertex
     {
         float Pos[4];
         float Col[4];
+    };
+
+    struct PhongVertex
+    {
+        float position[3];  // POSITION
+        float normal[3];    // NORMAL
+        float uv[2];        // TEXCOORD
+        float tangent[3];   // TANGENT
+        float binormal[3];  // BINORMAL
+    };
+
+    // Generate a cube centered at origin with side length 1.0f
+    PhongVertex cubeVertices[] =
+    {
+        // Front face (Z+)
+        { { -0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 1.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f,  0.0f } },
+        { {  0.5f, -0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f,  0.0f } },
+        { {  0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 1.0f, 0.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f,  0.0f } },
+        { { -0.5f,  0.5f,  0.5f }, {  0.0f,  0.0f,  1.0f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f,  0.0f } },
+
+        // Back face (Z-)
+        { {  0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f,  0.0f } },
+        { { -0.5f, -0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 1.0f }, { -1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f,  0.0f } },
+        { { -0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 1.0f, 0.0f }, { -1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f,  0.0f } },
+        { {  0.5f,  0.5f, -0.5f }, {  0.0f,  0.0f, -1.0f }, { 0.0f, 0.0f }, { -1.0f,  0.0f,  0.0f }, {  0.0f,  1.0f,  0.0f } },
+
+        // Top face (Y+)
+        { { -0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f }, { 0.0f, 1.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f, -1.0f } },
+        { {  0.5f,  0.5f,  0.5f }, {  0.0f,  1.0f,  0.0f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f, -1.0f } },
+        { {  0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f }, { 1.0f, 0.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f, -1.0f } },
+        { { -0.5f,  0.5f, -0.5f }, {  0.0f,  1.0f,  0.0f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f, -1.0f } },
+
+        // Bottom face (Y-)
+        { { -0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f }, { 0.0f, 1.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f,  1.0f } },
+        { {  0.5f, -0.5f, -0.5f }, {  0.0f, -1.0f,  0.0f }, { 1.0f, 1.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f,  1.0f } },
+        { {  0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f }, { 1.0f, 0.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f,  1.0f } },
+        { { -0.5f, -0.5f,  0.5f }, {  0.0f, -1.0f,  0.0f }, { 0.0f, 0.0f }, {  1.0f,  0.0f,  0.0f }, {  0.0f,  0.0f,  1.0f } },
+
+        // Right face (X+)
+        { {  0.5f, -0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f }, { 0.0f, 1.0f }, {  0.0f,  0.0f, -1.0f }, {  0.0f,  1.0f,  0.0f } },
+        { {  0.5f, -0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f, -1.0f }, {  0.0f,  1.0f,  0.0f } },
+        { {  0.5f,  0.5f, -0.5f }, {  1.0f,  0.0f,  0.0f }, { 1.0f, 0.0f }, {  0.0f,  0.0f, -1.0f }, {  0.0f,  1.0f,  0.0f } },
+        { {  0.5f,  0.5f,  0.5f }, {  1.0f,  0.0f,  0.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f, -1.0f }, {  0.0f,  1.0f,  0.0f } },
+
+        // Left face (X-)
+        { { -0.5f, -0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f }, { 0.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  1.0f,  0.0f } },
+        { { -0.5f, -0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f }, { 1.0f, 1.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  1.0f,  0.0f } },
+        { { -0.5f,  0.5f,  0.5f }, { -1.0f,  0.0f,  0.0f }, { 1.0f, 0.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  1.0f,  0.0f } },
+        { { -0.5f,  0.5f, -0.5f }, { -1.0f,  0.0f,  0.0f }, { 0.0f, 0.0f }, {  0.0f,  0.0f,  1.0f }, {  0.0f,  1.0f,  0.0f } },
+    };
+
+    // Index buffer for the cube (36 indices = 12 triangles)
+    uint32_t cubeIndices[] =
+    {
+        // Front face
+        0, 1, 2,    0, 2, 3,
+        // Back face
+        4, 5, 6,    4, 6, 7,
+        // Top face
+        8, 9, 10,   8, 10, 11,
+        // Bottom face
+        12, 13, 14, 12, 14, 15,
+        // Right face
+        16, 17, 18, 16, 18, 19,
+        // Left face
+        20, 21, 22, 20, 22, 23
     };
 
     float aspectRatio = width / (float)height;
@@ -59,12 +136,22 @@ bool Game::Init(HWND window, int width, int height)
         { { -0.25f, -0.25f * aspectRatio, 0.0f, 1.0f}, { 0.0f, 0.0f, 1.0f, 1.0f } }
     };
 
-    Muon::ResetCommandList(mPSO.GetPipelineState());
+    //Muon::ResetCommandList(mPSO.GetPipelineState());
+    Muon::ResetCommandList(mPhongPSO.GetPipelineState());
     Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
     stagingBuffer.Map();
     Muon::MeshFactory::LoadAllMeshes(codex);
     mTriangle.Init(triangleVertices, sizeof(triangleVertices), sizeof(Vertex), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);
+    mCube.Init(cubeVertices, sizeof(cubeVertices), sizeof(PhongVertex), cubeIndices, sizeof(cubeIndices), sizeof(cubeIndices) / sizeof(uint32_t), DXGI_FORMAT_R32_UINT);
     stagingBuffer.Unmap(0, stagingBuffer.GetBufferSize());
+
+    mWorldMatrixBuffer.Create(L"world matrix buffer", sizeof(cbPerEntity));
+    void* mapped = mWorldMatrixBuffer.Map();
+    cbPerEntity entity;
+    DirectX::XMStoreFloat4x4(&entity.world, DirectX::XMMatrixIdentity());
+    memcpy(mapped, &entity, sizeof(entity));
+    mWorldMatrixBuffer.Unmap(0, mWorldMatrixBuffer.GetBufferSize());
+
     Muon::CloseCommandList();
     Muon::ExecuteCommandList();
     return success;
@@ -92,22 +179,37 @@ void Game::Update(Muon::StepTimer const& timer)
 
 void Game::Render()
 {
+    using namespace Muon;
+
     // Don't try to render anything before the first Update.
     if (mTimer.GetFrameCount() == 0)
     {
         return;
     }
 
-    Muon::ResetCommandList(mPSO.GetPipelineState());
-    Muon::PrepareForRender();
-    mPSO.Bind();
-    mTriangle.Draw(Muon::GetCommandList());
-    Muon::FinalizeRender();
-    Muon::CloseCommandList();
-    Muon::ExecuteCommandList();
-    Muon::Present();
-    Muon::FlushCommandQueue();
-    Muon::UpdateBackBufferIndex();
+    ResetCommandList(mPSO.GetPipelineState());
+    PrepareForRender();
+    //mPSO.Bind();
+
+    mPhongPSO.Bind();       
+    mCamera.Bind(GetCommandList());
+    GetCommandList()->SetGraphicsRootConstantBufferView(1, mWorldMatrixBuffer.GetGPUVirtualAddress());
+
+    ResourceCodex& codex = ResourceCodex::GetSingleton();
+    const MeshID cubeID = fnv1a("cube.obj");
+    const Mesh* cubeMesh = codex.GetMesh(cubeID);
+    if (cubeMesh)
+    {
+        mCube.Draw(Muon::GetCommandList());
+        //cubeMesh->Draw(GetCommandList());
+    }
+
+    FinalizeRender();
+    CloseCommandList();
+    ExecuteCommandList();
+    Present();
+    FlushCommandQueue();
+    UpdateBackBufferIndex();
 }
 
 void Game::CreateDeviceDependentResources()
@@ -123,7 +225,10 @@ void Game::CreateWindowSizeDependentResources(int newWidth, int newHeight)
 Game::~Game()
 { 
     mTriangle.Release();
+    mCube.Release();
     mPSO.Destroy();
+    mPhongPSO.Destroy();
+    mWorldMatrixBuffer.TryDestroy();
     mCamera.Destroy();
     mInput.Destroy();
 
