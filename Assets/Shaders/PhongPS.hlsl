@@ -28,7 +28,8 @@ struct VertexOut
 //SamplerState samplerOptions : register(s0);
 float4 main(VertexOut input) : SV_TARGET
 {
-    return float4(1, 0, 0, 1);
+    float3 normalRGB = input.normal.xyz * 0.5 + 0.5;
+    return float4(normalRGB, 1);
     // Sample diffuse texture, normal map(unpacked)
     //float3 surfaceColor = diffuseTexture.Sample(samplerOptions, input.uv).rgb;
     //

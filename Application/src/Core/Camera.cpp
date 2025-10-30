@@ -13,7 +13,7 @@ using namespace DirectX;
 Camera::Camera() :
     mNear(0.1f),
     mFar(100.0f),
-    mSensitivity(0.0f),
+    mSensitivity(1.0f),
     mForward(DirectX::XMVectorSet(1.f, 0.f, 0.f, 0.f)),
     mUp(DirectX::XMVectorSet(0.f, 1.f, 0.f, 0.f)),
     mRight(DirectX::XMVectorSet(1.f, 0.f, 0.f, 0.f)),
@@ -38,25 +38,14 @@ void Camera::Init(DirectX::XMFLOAT3& pos, float aspectRatio, float nearPlane, fl
     mPosition = XMLoadFloat3(&pos);
     mTarget = XMVectorZero();
 
-    // Initialize the camera's target and 
-    mPosition = XMVectorSet(pos.x, pos.y, pos.z, 0);
-    mTarget = XMVectorZero();
-
     const float CAMERA_DIST = 1.0f;
-    XMVECTOR initialPos = XMVectorSet(-CAMERA_DIST, 0.0f, -CAMERA_DIST, 0.0f);
-    XMVECTOR initialForward = -initialPos;
-    XMVECTOR initialRight = XMVectorSet(-1.0f, 0.0f, 1.0f, 0.0f);
-    XMVECTOR initialUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
 
-    initialPos = XMVector3Rotate(initialPos, XMQuaternionRotationAxis(initialRight, XM_PI / 6));
-    initialForward = XMVector3Rotate(initialForward, XMQuaternionRotationAxis(-initialRight, XM_PI / 6));
-    initialUp = XMVector3Rotate(initialUp, XMQuaternionRotationAxis(initialRight, XM_PI / 6));
+    mForward = XMVector3Normalize(XMVectorSubtract(mTarget, mPosition));
 
-    XMVECTOR verticalOffset = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
-    mPosition = XMVectorAdd(initialPos, verticalOffset);
-    mForward = XMVectorAdd(initialForward, verticalOffset);
-    mRight = XMVectorAdd(initialRight, verticalOffset);
-    mUp = XMVectorAdd(initialUp, verticalOffset);
+    XMVECTOR worldUp = XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f);
+
+    mRight = XMVector3Normalize(XMVector3Cross(worldUp, mForward));
+    mUp = XMVector3Cross(mForward, mRight);
 
     mConstantBuffer.Create(L"CameraConstantBuffer", Muon::GetConstantBufferSize(sizeof(cbCamera)));
 
