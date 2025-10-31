@@ -15,7 +15,6 @@ namespace Muon
 
 Buffer::~Buffer()
 {
-	BaseDestroy();
 }
 
 void Buffer::BaseCreate(const wchar_t* name, size_t size, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES resourceState)
@@ -64,7 +63,6 @@ UploadBuffer::UploadBuffer()
 
 UploadBuffer::~UploadBuffer()
 {
-	Destroy();
 }
 
 void UploadBuffer::Create(const wchar_t* name, size_t size)
@@ -156,7 +154,6 @@ bool UploadBuffer::Allocate(UINT desiredSize, UINT alignment, void*& out_mappedP
 
 DefaultBuffer::~DefaultBuffer()
 {
-	Destroy();
 }
 
 void DefaultBuffer::Create(const wchar_t* name, size_t size)
