@@ -256,6 +256,7 @@ Game::~Game()
     mTriangle.Release();
     mCube.Release();
     mWorldMatrixBuffer.Destroy();
+    mLightBuffer.Destroy();
     mCamera.Destroy();
     mInput.Destroy();
 
