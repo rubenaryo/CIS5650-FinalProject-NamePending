@@ -58,9 +58,9 @@ void ResourceCodex::Init()
     gCodexInstance = new ResourceCodex();
     gCodexInstance->mMeshStagingBuffer.Create(L"Mesh Staging Buffer", 64 * 1024 * 1024);
     ShaderFactory::LoadAllShaders(*gCodexInstance);
+    TextureFactory::LoadAllTextures(GetDevice(), GetCommandList(), *gCodexInstance);
     MaterialFactory::CreateAllMaterials(*gCodexInstance);
 
-    //TextureFactory::LoadAllTextures(codexInstance);
 }
 
 void ResourceCodex::Destroy()

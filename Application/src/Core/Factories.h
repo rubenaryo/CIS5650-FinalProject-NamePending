@@ -18,11 +18,11 @@ struct ShaderFactory final
     static void LoadAllShaders(ResourceCodex& codex);
 };
 
-//struct TextureFactory final
-//{
-//    //typedef std::pair<TextureID, const ResourceBindChord> TexturePair;
-//    static void LoadAllTextures(ID3D11Device* device, ID3D11DeviceContext* context, ResourceCodex& codex);
-//};
+struct TextureFactory final
+{
+    //typedef std::pair<TextureID, const ResourceBindChord> TexturePair;
+    static void LoadAllTextures(ID3D12Device* pDevice, ID3D12CommandList* pCommandList, ResourceCodex& codex);
+};
 
 struct MeshFactory final
 {
