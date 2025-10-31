@@ -46,7 +46,7 @@ project (APP_NAME)
     links
     {
         "external/assimp/assimp",
-        "external/dxtk12/DirectXTK12"
+        "external/dxtk12/%{cfg.buildcfg}/DirectXTK12"
     }
 
     prebuildcommands
