@@ -29,6 +29,8 @@ bool Game::Init(HWND window, int width, int height)
     using namespace Muon;
 
     bool success = Muon::InitDX12(window, width, height);
+    
+    Muon::ResetCommandList(nullptr);
     ResourceCodex::Init();
 
     ResourceCodex& codex = ResourceCodex::GetSingleton();
@@ -125,7 +127,6 @@ bool Game::Init(HWND window, int width, int height)
     };
 
     //Muon::ResetCommandList(mPSO.GetPipelineState());
-    Muon::ResetCommandList(nullptr);
     Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
     stagingBuffer.Map();
     Muon::MeshFactory::LoadAllMeshes(codex);

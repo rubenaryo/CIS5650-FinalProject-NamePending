@@ -19,7 +19,7 @@ struct Buffer
     Buffer() = default;
     virtual ~Buffer();
 
-    void BaseCreate(const wchar_t* name, size_t size, D3D12_HEAP_TYPE heapType);
+    void BaseCreate(const wchar_t* name, size_t size, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES resourceState);
     void BaseDestroy();
 
     size_t GetBufferSize() const { return mBufferSize; }
@@ -55,9 +55,8 @@ private:
     size_t mOffset = 0; // The current offset into the buffer where allocations take place
 };
 
-class DefaultBuffer : Buffer
+struct DefaultBuffer : Buffer
 {
-public:
     DefaultBuffer() = default;
     ~DefaultBuffer();
 

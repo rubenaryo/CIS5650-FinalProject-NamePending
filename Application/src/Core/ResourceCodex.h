@@ -78,7 +78,7 @@ private:
     
     friend struct MaterialFactory;
     //MaterialIndex PushMaterial(const Material& material);
-    MaterialType* InsertMaterialType(const char* name);
+    MaterialType* InsertMaterialType(const wchar_t* name);
 
     friend struct ShaderFactory;
     void AddVertexShader(ShaderID hash, const wchar_t* path);

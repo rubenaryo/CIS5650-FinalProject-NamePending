@@ -15,9 +15,10 @@ namespace Muon
 
 Buffer::~Buffer()
 {
+	BaseDestroy();
 }
 
-void Buffer::BaseCreate(const wchar_t* name, size_t size, D3D12_HEAP_TYPE heapType)
+void Buffer::BaseCreate(const wchar_t* name, size_t size, D3D12_HEAP_TYPE heapType, D3D12_RESOURCE_STATES resourceState)
 {
 	mBufferSize = size;
 
@@ -41,7 +42,7 @@ void Buffer::BaseCreate(const wchar_t* name, size_t size, D3D12_HEAP_TYPE heapTy
 	ResourceDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
 	HRESULT hr = GetDevice()->CreateCommittedResource(&HeapProps, D3D12_HEAP_FLAG_NONE, &ResourceDesc,
-		D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(mpResource.GetAddressOf()));
+		resourceState, nullptr, IID_PPV_ARGS(mpResource.GetAddressOf()));
 	COM_EXCEPT(hr);
 
 	mName = name;
@@ -63,12 +64,13 @@ UploadBuffer::UploadBuffer()
 
 UploadBuffer::~UploadBuffer()
 {
+	Destroy();
 }
 
 void UploadBuffer::Create(const wchar_t* name, size_t size)
 {
 	Destroy();
-	BaseCreate(name, size, D3D12_HEAP_TYPE_UPLOAD);
+	BaseCreate(name, size, D3D12_HEAP_TYPE_UPLOAD, D3D12_RESOURCE_STATE_GENERIC_READ);
 }
 
 void UploadBuffer::Destroy()
@@ -152,10 +154,15 @@ bool UploadBuffer::Allocate(UINT desiredSize, UINT alignment, void*& out_mappedP
 
 ////////////////////////////////////////////////////////////////
 
+DefaultBuffer::~DefaultBuffer()
+{
+	Destroy();
+}
+
 void DefaultBuffer::Create(const wchar_t* name, size_t size)
 {
 	Destroy();
-	BaseCreate(name, size, D3D12_HEAP_TYPE_DEFAULT);
+	BaseCreate(name, size, D3D12_HEAP_TYPE_DEFAULT, D3D12_RESOURCE_STATE_COMMON);
 }
 
 bool DefaultBuffer::Populate(void* data, size_t dataSize, UploadBuffer& stagingBuffer, ID3D12GraphicsCommandList* pCommandList)

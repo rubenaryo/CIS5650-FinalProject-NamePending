@@ -333,13 +333,16 @@ bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
         return false;
     }
 
+    UploadBuffer materialParamsStagingBuffer;
+    materialParamsStagingBuffer.Create(L"material params staging buffer", sizeof(cbMaterialParams));
+
     // Test MaterialType
     {
-        const char* kPhongMaterialName = "Phong";
+        const wchar_t* kPhongMaterialName = L"Phong";
         MaterialType* pPhongMaterial = codex.InsertMaterialType(kPhongMaterialName);
         if (!pPhongMaterial)
         {
-            Muon::Printf("Warning: %s MaterialType failed to be inserted into codex!", kPhongMaterialName);
+            Muon::Printf(L"Warning: %s MaterialType failed to be inserted into codex!", kPhongMaterialName);
             return false;
         }
 
@@ -349,22 +352,17 @@ bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
 
         if (!pPhongMaterial->Generate())
         {
-            Muon::Printf("Warning: %s MaterialType failed to Generate()!", pPhongMaterial->GetName().c_str());
+            Muon::Printf(L"Warning: %s MaterialType failed to Generate()!", pPhongMaterial->GetName().c_str());
+            return false;
         }
 
-        // TODO: This should be done automatically upon adding the pixel shader
-        //pbr->AddParameter("colorTint", ParameterType::Float4);
-        //pbr->AddParameter("specularity", ParameterType::Float);
-        //if (!pbr->Generate())
-        //{
-        //    Muon::Printf("Warning: %s MaterialType failed to Generate()!", pbr->GetName().c_str());
-        //}
+        cbMaterialParams phongMaterialParams;
+        phongMaterialParams.colorTint = DirectX::XMFLOAT4(1, 1, 1, 1);
+        phongMaterialParams.specularExp = 32.0f;
+
+        pPhongMaterial->PopulateMaterialParams(materialParamsStagingBuffer, Muon::GetCommandList());
     }
 
-    // Test MaterialInstance
-    {
-
-    }
 
     return true;
 }

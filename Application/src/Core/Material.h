@@ -9,6 +9,7 @@ Description : Material class for shader information
 #include <Core/DXCore.h>
 #include "CBufferStructs.h"
 
+#include <Core/Buffers.h>
 #include <Core/PipelineState.h>
 #include <Core/Shader.h>
 #include <unordered_map>
@@ -77,18 +78,21 @@ static const int32_t CB_ROOTIDX_INVALID = -1;
 class MaterialType
 {
 public:
-    MaterialType(const char* name);
+    MaterialType(const wchar_t* name);
     void Destroy();
 
     bool Bind(ID3D12GraphicsCommandList* pCommandList) const;
 
-    const std::string& GetName() const { return mName; }
+    const std::wstring& GetName() const { return mName; }
     void SetVertexShader(const VertexShader* vs);
     void SetPixelShader(const PixelShader* ps);
     //void AddParameter(const char* paramName, ParameterType type);
     
     const std::vector<ParameterDesc>& GetAllParameters() const { return mParameters; }
     const ParameterDesc* GetParameter(const char* paramName) const;
+
+    void SetMaterialParams(cbMaterialParams& params) { mMaterialParams = params; }
+    bool PopulateMaterialParams(UploadBuffer& stagingBuffer, ID3D12GraphicsCommandList* pCommandList);
 
     const std::vector<ConstantBufferReflection>& GetConstantBuffers() const { return mConstantBuffers; }
     int GetConstantBufferRootIndex(const char* cbName) const;
@@ -114,7 +118,10 @@ protected:
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mpRootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> mpPipelineState;
 
-    std::string mName;
+    std::wstring mName;
+
+    DefaultBuffer mMaterialParamsBuffer;
+    cbMaterialParams mMaterialParams;
 
     bool mInitialized = false;
 

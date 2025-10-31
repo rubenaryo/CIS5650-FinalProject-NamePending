@@ -15,7 +15,7 @@ namespace Muon
 
 //////////
 
-MaterialType::MaterialType(const char* name)
+MaterialType::MaterialType(const wchar_t* name)
 	:	mName(name)
 {
 }
@@ -24,6 +24,7 @@ void MaterialType::Destroy()
 {
     mpRootSignature.Reset();
     mpPipelineState.Reset();
+    mMaterialParamsBuffer.Destroy();
 }
 
 bool MaterialType::Bind(ID3D12GraphicsCommandList* pCommandList) const
@@ -33,6 +34,12 @@ bool MaterialType::Bind(ID3D12GraphicsCommandList* pCommandList) const
 
     pCommandList->SetGraphicsRootSignature(mpRootSignature.Get());
     pCommandList->SetPipelineState(mpPipelineState.Get());
+
+    int32_t materialParamsRootIndex = GetConstantBufferRootIndex("PSPerMaterial");
+    if (materialParamsRootIndex != CB_ROOTIDX_INVALID)
+    {
+        pCommandList->SetGraphicsRootConstantBufferView(materialParamsRootIndex, mMaterialParamsBuffer.GetGPUVirtualAddress());
+    }
 
     return true;
 }
@@ -55,6 +62,11 @@ const ParameterDesc* MaterialType::GetParameter(const char* paramName) const
 
 	size_t index = itFind->second;
 	return &mParameters.at(index);
+}
+
+bool MaterialType::PopulateMaterialParams(UploadBuffer& stagingBuffer, ID3D12GraphicsCommandList* pCommandList)
+{
+    return mMaterialParamsBuffer.Populate(&mMaterialParams, sizeof(cbMaterialParams), stagingBuffer, pCommandList);
 }
 
 int32_t MaterialType::GetConstantBufferRootIndex(const char* cbName) const
@@ -84,6 +96,9 @@ bool MaterialType::Generate(DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat)
 
     if (!GeneratePipelineState(rtvFormat, dsvFormat))
         return false;
+
+    std::wstring bufferName = mName + L"_ParamsBuffer";
+    mMaterialParamsBuffer.Create(bufferName.c_str(), sizeof(cbMaterialParams));
 
     mInitialized = true;
     return true;

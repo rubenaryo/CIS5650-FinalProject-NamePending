@@ -189,7 +189,7 @@ void ResourceCodex::AddPixelShader(ShaderID hash, const wchar_t* path)
 //    return (MaterialIndex)(mMaterials.size() - 1);
 //}
 
-MaterialType* ResourceCodex::InsertMaterialType(const char* name)
+MaterialType* ResourceCodex::InsertMaterialType(const wchar_t* name)
 {
     if (!name)
         return nullptr;
