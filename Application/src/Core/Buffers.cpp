@@ -1,39 +1,28 @@
 /*----------------------------------------------
 Ruben Young (rubenaryo@gmail.com)
 Date : 2025/3
-Description : Implementation of GPU Upload Buffers
+Description : Implementation of GPU Buffers
 ----------------------------------------------*/
-#include "UploadBuffer.h"
 
 #include <d3dx12.h>
 #include <Core/DXCore.h>
+#include <Core/Buffers.h>
 #include <Core/ThrowMacros.h>
 #include <Utils/Utils.h>
 
 namespace Muon
 {
 
-UploadBuffer::UploadBuffer()
+Buffer::~Buffer()
 {
-
 }
 
-UploadBuffer::~UploadBuffer()
+void Buffer::BaseCreate(const wchar_t* name, size_t size, D3D12_HEAP_TYPE heapType)
 {
-	TryDestroy();
-}
-
-void UploadBuffer::Create(const wchar_t* name, size_t size)
-{
-	if (!GetDevice())
-		return;
-
-	TryDestroy();
-
 	mBufferSize = size;
 
 	D3D12_HEAP_PROPERTIES HeapProps;
-	HeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+	HeapProps.Type = heapType;
 	HeapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
 	HeapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 	HeapProps.CreationNodeMask = 1;
@@ -59,17 +48,37 @@ void UploadBuffer::Create(const wchar_t* name, size_t size)
 	mpResource->SetName(mName.c_str());
 }
 
-void UploadBuffer::TryDestroy()
+void Buffer::BaseDestroy()
+{
+	mpResource.Reset();
+	mBufferSize = 0;
+	mName = std::wstring();
+}
+
+////////////////////////////////////////////////////////////////
+
+UploadBuffer::UploadBuffer()
+{
+}
+
+UploadBuffer::~UploadBuffer()
+{
+}
+
+void UploadBuffer::Create(const wchar_t* name, size_t size)
+{
+	Destroy();
+	BaseCreate(name, size, D3D12_HEAP_TYPE_UPLOAD);
+}
+
+void UploadBuffer::Destroy()
 {
 	if (mMappedPtr)
 		Unmap(0, mBufferSize);
 
-	if (mpResource)
-		mpResource.Reset();
-
-	mName = std::wstring();
-	mBufferSize = 0;
 	mOffset = 0;
+
+	BaseDestroy();
 }
 
 void* UploadBuffer::Map()
@@ -138,6 +147,41 @@ bool UploadBuffer::Allocate(UINT desiredSize, UINT alignment, void*& out_mappedP
 	mOffset = aligned + desiredSize;
 
 	return true;
+}
+
+
+////////////////////////////////////////////////////////////////
+
+void DefaultBuffer::Create(const wchar_t* name, size_t size)
+{
+	Destroy();
+	BaseCreate(name, size, D3D12_HEAP_TYPE_DEFAULT);
+}
+
+bool DefaultBuffer::Populate(void* data, size_t dataSize, UploadBuffer& stagingBuffer, ID3D12GraphicsCommandList* pCommandList)
+{
+	if (!pCommandList || !data || dataSize > mBufferSize)
+		return false;
+
+	void* mapped = stagingBuffer.Map();
+	memcpy(mapped, data, mBufferSize);
+	stagingBuffer.Unmap(0, 0);
+
+	pCommandList->CopyBufferRegion(mpResource.Get(), 0, stagingBuffer.GetResource(), 0, mBufferSize);
+
+	CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(
+		mpResource.Get(),
+		D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_GENERIC_READ
+	);
+	pCommandList->ResourceBarrier(1, &barrier);
+
+	return true;
+}
+
+void DefaultBuffer::Destroy()
+{
+	BaseDestroy();
 }
 
 size_t GetConstantBufferSize(size_t desiredSize) 

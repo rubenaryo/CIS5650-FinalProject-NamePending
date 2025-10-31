@@ -11,7 +11,7 @@ Description : Loads and distributes all static resources (materials, textures, e
 #include "Material.h"
 #include "Mesh.h"
 #include "Shader.h"
-#include <Core/UploadBuffer.h>
+#include <Core/Buffers.h>
 
 #include <unordered_map>
 

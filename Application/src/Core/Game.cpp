@@ -218,7 +218,7 @@ Game::~Game()
 { 
     mTriangle.Release();
     mCube.Release();
-    mWorldMatrixBuffer.TryDestroy();
+    mWorldMatrixBuffer.Destroy();
     mCamera.Destroy();
     mInput.Destroy();
 

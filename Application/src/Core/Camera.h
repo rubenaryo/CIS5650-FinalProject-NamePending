@@ -8,7 +8,7 @@ Description : Interface for Quaternion-Based Camera functionality
 
 #include "CBufferStructs.h"
 #include "DXCore.h"
-#include <Core/UploadBuffer.h>
+#include <Core/Buffers.h>
 
 //namespace DirectX
 //{

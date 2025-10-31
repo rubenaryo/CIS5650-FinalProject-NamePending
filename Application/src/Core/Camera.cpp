@@ -55,7 +55,7 @@ void Camera::Init(DirectX::XMFLOAT3& pos, float aspectRatio, float nearPlane, fl
 
 void Camera::Destroy()
 {
-    mConstantBuffer.TryDestroy();
+    mConstantBuffer.Destroy();
 }
 
 void Camera::UpdateView()

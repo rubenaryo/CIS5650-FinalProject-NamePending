@@ -72,7 +72,7 @@ void ResourceCodex::Destroy()
     }
     gCodexInstance->mMeshMap.clear();
 
-    gCodexInstance->mMeshStagingBuffer.TryDestroy();
+    gCodexInstance->mMeshStagingBuffer.Destroy();
 
     for (auto& m : gCodexInstance->mMaterialTypeMap)
     {
