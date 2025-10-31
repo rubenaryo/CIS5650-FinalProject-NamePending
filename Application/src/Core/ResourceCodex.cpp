@@ -57,6 +57,8 @@ void ResourceCodex::Init()
 
     gCodexInstance = new ResourceCodex();
     gCodexInstance->mMeshStagingBuffer.Create(L"Mesh Staging Buffer", 64 * 1024 * 1024);
+    gCodexInstance->mMaterialParamsStagingBuffer.Create(L"material params staging buffer", sizeof(cbMaterialParams));
+
     ShaderFactory::LoadAllShaders(*gCodexInstance);
     TextureFactory::LoadAllTextures(GetDevice(), GetCommandList(), *gCodexInstance);
     MaterialFactory::CreateAllMaterials(*gCodexInstance);
@@ -80,6 +82,8 @@ void ResourceCodex::Destroy()
         mat.Destroy();
     }
     gCodexInstance->mMaterialTypeMap.clear();
+
+    gCodexInstance->mMaterialParamsStagingBuffer.Destroy();
 
     for (auto& s : gCodexInstance->mVertexShaders)
     {

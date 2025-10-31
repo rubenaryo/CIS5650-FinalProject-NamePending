@@ -55,7 +55,8 @@ public:
     const VertexShader* GetVertexShader(ShaderID UID) const;
     const PixelShader* GetPixelShader(ShaderID UID) const;
     const MaterialType* GetMaterialType(MaterialTypeID UID) const;
-    Muon::UploadBuffer& GetStagingBuffer() { return mMeshStagingBuffer; }
+    Muon::UploadBuffer& GetMeshStagingBuffer() { return mMeshStagingBuffer; }
+    Muon::UploadBuffer& GetMatParamsStagingBuffer() { return mMaterialParamsStagingBuffer; }
 
 private:
     std::unordered_map<ShaderID, VertexShader>  mVertexShaders;
@@ -72,6 +73,8 @@ private:
     // An intermediate upload buffer used for uploading vertex/index data to the GPU
     Muon::UploadBuffer mMeshStagingBuffer;
 
+
+    UploadBuffer mMaterialParamsStagingBuffer;
 private:
     friend struct TextureFactory;
     //void InsertTexture(TextureID hash, UINT slot, ID3D11ShaderResourceView* pSRV);

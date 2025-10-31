@@ -127,7 +127,7 @@ bool Game::Init(HWND window, int width, int height)
     };
 
     //Muon::ResetCommandList(mPSO.GetPipelineState());
-    Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
+    Muon::UploadBuffer& stagingBuffer = codex.GetMeshStagingBuffer();
     stagingBuffer.Map();
     Muon::MeshFactory::LoadAllMeshes(codex);
     mTriangle.Init(triangleVertices, sizeof(triangleVertices), sizeof(Vertex), nullptr, 0, 0, DXGI_FORMAT_R32_UINT);

@@ -95,7 +95,7 @@ bool Mesh::Init(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* 
 bool Mesh::PopulateBuffers(void* vertexData, UINT vertexDataSize, UINT vertexStride, void* indexData, UINT indexDataSize, UINT indexCount)
 {
     ResourceCodex& codex = ResourceCodex::GetSingleton();
-    Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
+    Muon::UploadBuffer& stagingBuffer = codex.GetMeshStagingBuffer();
     ID3D12GraphicsCommandList* pCommandList = Muon::GetCommandList();
 
     bool bDoIndexBuffer = indexData && indexDataSize > 0;

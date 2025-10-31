@@ -286,9 +286,6 @@ bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
         return false;
     }
 
-    UploadBuffer materialParamsStagingBuffer;
-    materialParamsStagingBuffer.Create(L"material params staging buffer", sizeof(cbMaterialParams));
-
     // Test MaterialType
     {
         const wchar_t* kPhongMaterialName = L"Phong";
@@ -313,7 +310,7 @@ bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
         phongMaterialParams.colorTint = DirectX::XMFLOAT4(1, 1, 1, 1);
         phongMaterialParams.specularExp = 32.0f;
 
-        pPhongMaterial->PopulateMaterialParams(materialParamsStagingBuffer, Muon::GetCommandList());
+        pPhongMaterial->PopulateMaterialParams(codex.GetMatParamsStagingBuffer(), Muon::GetCommandList());
     }
 
 
