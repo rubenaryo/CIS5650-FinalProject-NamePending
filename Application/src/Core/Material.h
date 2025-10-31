@@ -76,25 +76,43 @@ class MaterialType
 {
 public:
     MaterialType(const char* name);
+    void Destroy();
 
     const std::string& GetName() const { return mName; }
-    void SetVertexShader(const VertexShader& vs);
-    void SetPixelShader(const PixelShader& ps);
-    void SetRootSignature(ID3D12RootSignature* pRootSig);
-    void AddParameter(const char* paramName, ParameterType type);
+    void SetVertexShader(const VertexShader* vs);
+    void SetPixelShader(const PixelShader* ps);
+    //void AddParameter(const char* paramName, ParameterType type);
+    
     const ParameterDesc* GetParameter(const char* paramName) const;
+    const std::vector<ParameterDesc>& GetAllParameters() const { return mParameters; }
+    const std::vector<ConstantBufferReflection>& GetConstantBuffers() const { return mConstantBuffers; }
 
-    bool Generate();
+    bool Generate(DXGI_FORMAT rtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM,
+        DXGI_FORMAT dsvFormat = DXGI_FORMAT_D32_FLOAT);
 
 protected:
+    bool MergeShaderResources();
+    bool GenerateRootSignature();
+    bool GeneratePipelineState(DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat);
+
     const VertexShader* mpVS = nullptr;
     const PixelShader* mpPS = nullptr;
+
+    std::vector<ShaderResourceBinding> mResources;
+    std::vector<ConstantBufferReflection> mConstantBuffers;
     std::vector<ParameterDesc> mParameters;
+
     std::unordered_map<const char*, size_t> mParamNameToIndex;
-    Muon::GraphicsPipelineState mPipelineState;
+    std::unordered_map<std::string, int> mCBNameToRootIndex;
+
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> mPipelineState;
+
     std::string mName;
-    size_t mSize = 0;
-    TextureSlotFlags mFlags = TSF_NONE; // Used for validating that the right textures have been properly specified by the material instance
+
+    bool mInitialized = false;
+
+    //TextureSlotFlags mFlags = TSF_NONE; // Used for validating that the right textures have been properly specified by the material instance
 };
 
 // MaterialInstances are immutably tied to their parent type at creation. 

@@ -5,8 +5,10 @@ Description : Useful functions for shader reflection system
 ----------------------------------------------*/
 #include <Core/ShaderUtils.h>
 #include <Core/Shader.h>
+#include <Utils/Utils.h>
 
 #include <DirectXMath.h>
+#include <unordered_map>
 
 namespace Muon
 {
@@ -309,6 +311,72 @@ namespace Muon
         vbDesc.SemanticsArr = semanticsArr;
         vbDesc.AttrCount = numInputs;
         out_shader->VertexDesc = vbDesc;
+
+        return true;
+    }
+
+    bool MergeReflectionData(const ShaderReflectionData& vsData, const ShaderReflectionData& psData, std::vector<ShaderResourceBinding>& outResources, std::vector<ConstantBufferReflection>& outCBs)
+    {
+        outResources.clear();
+        outCBs.clear();
+
+        // Merge resources - combine from both shaders
+        // VS resources come first, then PS resources
+        for (const auto& res : vsData.Resources)
+            outResources.push_back(res);
+
+        for (const auto& res : psData.Resources)
+            outResources.push_back(res);
+
+        // Merge constant buffers - check for duplicates by name
+        std::unordered_map<std::string, size_t> cbNameToIndex;
+
+        for (const auto& cb : vsData.ConstantBuffers)
+        {
+            outCBs.push_back(cb);
+            cbNameToIndex[cb.Name] = outCBs.size() - 1;
+        }
+
+        for (const auto& cb : psData.ConstantBuffers)
+        {
+            auto it = cbNameToIndex.find(cb.Name);
+            if (it != cbNameToIndex.end())
+            {
+                // CB exists in both shaders - merge variables
+                auto& existingCB = outCBs[it->second];
+
+                // Verify same size and binding
+                if (existingCB.Size != cb.Size ||
+                    existingCB.BindPoint != cb.BindPoint ||
+                    existingCB.Space != cb.Space)
+                {
+                    Printf("Warning: Constant buffer '%s' has different properties in VS and PS!\n", cb.Name.c_str());
+                }
+
+                // Merge variables (avoid duplicates)
+                for (const auto& var : cb.Variables)
+                {
+                    // TODO: This feels a bit slow
+                    bool found = false;
+                    for (const auto& existingVar : existingCB.Variables)
+                    {
+                        if (existingVar.Name == var.Name)
+                        {
+                            found = true;
+                            break;
+                        }
+                    }
+                    if (!found)
+                        existingCB.Variables.push_back(var);
+                }
+            }
+            else
+            {
+                // New CB only in pixel shader
+                outCBs.push_back(cb);
+                cbNameToIndex[cb.Name] = outCBs.size() - 1;
+            }
+        }
 
         return true;
     }

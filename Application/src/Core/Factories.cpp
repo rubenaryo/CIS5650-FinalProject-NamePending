@@ -325,7 +325,7 @@ bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
     const MeshID kSkyMeshID = 0x4a986f37; // cube
 
     const VertexShader* pPhongVS = codex.GetVertexShader(kPhongVSID);
-    const PixelShader* pPhongPS = codex.GetPixelShader(kPhongPSNormalMapID);
+    const PixelShader* pPhongPS = codex.GetPixelShader(kPhongPSID);
 
     if (!pPhongVS || !pPhongPS)
     {
@@ -335,25 +335,30 @@ bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
 
     // Test MaterialType
     {
-        const char* PBRMaterialName = "StandardPBR";
-        MaterialType* pbr = codex.InsertMaterialType(PBRMaterialName);
-        if (!pbr)
+        const char* kPhongMaterialName = "Phong";
+        MaterialType* pPhongMaterial = codex.InsertMaterialType(kPhongMaterialName);
+        if (!pPhongMaterial)
         {
-            Muon::Printf("Warning: %s MaterialType failed to be inserted into codex!", PBRMaterialName);
+            Muon::Printf("Warning: %s MaterialType failed to be inserted into codex!", kPhongMaterialName);
             return false;
         }
 
         //pbr->SetRootSignature(Muon::GetRootSignature());
-        pbr->SetVertexShader(*pPhongVS);
-        pbr->SetPixelShader(*pPhongPS);
+        pPhongMaterial->SetVertexShader(pPhongVS);
+        pPhongMaterial->SetPixelShader(pPhongPS);
+
+        if (!pPhongMaterial->Generate())
+        {
+            Muon::Printf("Warning: %s MaterialType failed to Generate()!", pPhongMaterial->GetName().c_str());
+        }
 
         // TODO: This should be done automatically upon adding the pixel shader
-        pbr->AddParameter("colorTint", ParameterType::Float4);
-        pbr->AddParameter("specularity", ParameterType::Float);
-        if (!pbr->Generate())
-        {
-            Muon::Printf("Warning: %s MaterialType failed to Generate()!", pbr->GetName().c_str());
-        }
+        //pbr->AddParameter("colorTint", ParameterType::Float4);
+        //pbr->AddParameter("specularity", ParameterType::Float);
+        //if (!pbr->Generate())
+        //{
+        //    Muon::Printf("Warning: %s MaterialType failed to Generate()!", pbr->GetName().c_str());
+        //}
     }
 
     // Test MaterialInstance

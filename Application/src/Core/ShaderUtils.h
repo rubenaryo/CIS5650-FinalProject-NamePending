@@ -13,6 +13,8 @@ namespace Muon
     struct VertexShader;
     struct PixelShader;
     struct ShaderReflectionData;
+    struct ShaderResourceBinding;
+    struct ConstantBufferReflection;
 
     enum class ParameterType;
 }
@@ -36,6 +38,12 @@ void PopulateInputElements(D3D12_INPUT_CLASSIFICATION slotClass,
 bool BuildInputLayout(ID3D12ShaderReflection* pReflection, 
     ID3DBlob* pBlob, 
     VertexShader* out_shader);
+
+bool MergeReflectionData(
+    const ShaderReflectionData& vsData,
+    const ShaderReflectionData& psData,
+    std::vector<ShaderResourceBinding>& outResources,
+    std::vector<ConstantBufferReflection>& outCBs);
 
 }
 #endif
