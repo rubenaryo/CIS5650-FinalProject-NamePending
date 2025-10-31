@@ -102,9 +102,9 @@ void Camera::UpdateProjection(float aspectRatio)
     }
 }
 
-void Camera::Bind(ID3D12GraphicsCommandList* pCommandList) const
+void Camera::Bind(int32_t rootParamIndex, ID3D12GraphicsCommandList* pCommandList) const
 {
-    pCommandList->SetGraphicsRootConstantBufferView(0, mConstantBuffer.GetGPUVirtualAddress());
+    pCommandList->SetGraphicsRootConstantBufferView((UINT)rootParamIndex, mConstantBuffer.GetGPUVirtualAddress());
 }
 
 void Camera::GetPosition3A(XMFLOAT3A* out_pos) const

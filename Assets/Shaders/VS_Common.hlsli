@@ -15,7 +15,7 @@ cbuffer VSCamera : register(b10)
 }
 
 // Values changed for every entity
-cbuffer VSEntity: register(b11)
+cbuffer VSWorld: register(b11)
 {
     float4x4 world;
 }

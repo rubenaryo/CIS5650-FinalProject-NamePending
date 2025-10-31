@@ -178,21 +178,36 @@ void Game::Render()
     ResetCommandList(nullptr);
     PrepareForRender();
 
+    // Fetch the desired material from the codex
     ResourceCodex& codex = ResourceCodex::GetSingleton();
     MaterialTypeID matId = fnv1a("Phong");
     const Muon::MaterialType* pPhongMaterial = codex.GetMaterialType(matId);
     if (pPhongMaterial)
     {
+        // Bind the material's PipelineState and RootSignature (Defined by Shaders)
         pPhongMaterial->Bind(GetCommandList());
+        
+        // Bind the Camera's Upload Buffer to the root index known by the material
+        int32_t cameraRootIdx = pPhongMaterial->GetConstantBufferRootIndex("VSCamera");
+        if (cameraRootIdx != CB_ROOTIDX_INVALID)
+        {
+            mCamera.Bind(cameraRootIdx, GetCommandList());
+        }
+
+        // Bind the world matrix Upload Buffer to the root index known by the material
+        int32_t worldMatrixRootIdx = pPhongMaterial->GetConstantBufferRootIndex("VSWorld");
+        if (worldMatrixRootIdx != CB_ROOTIDX_INVALID)
+        {
+            GetCommandList()->SetGraphicsRootConstantBufferView(worldMatrixRootIdx, mWorldMatrixBuffer.GetGPUVirtualAddress());
+        }
     }
 
-    mCamera.Bind(GetCommandList());
-    GetCommandList()->SetGraphicsRootConstantBufferView(1, mWorldMatrixBuffer.GetGPUVirtualAddress());
-;
+    // Fetch the desired mesh from the codex
     const MeshID cubeID = fnv1a("cube.obj");
     const Mesh* cubeMesh = codex.GetMesh(cubeID);
     if (cubeMesh)
     {
+        // Bind VBO/IBO and Draw
         mCube.Draw(Muon::GetCommandList());
     }
 

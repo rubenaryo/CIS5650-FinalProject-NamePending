@@ -44,7 +44,7 @@ public:
     void UpdateView();
     void UpdateProjection(float aspectRatio);
 
-    void Bind(ID3D12GraphicsCommandList* pCommandList) const;
+    void Bind(int32_t rootParamIndex, ID3D12GraphicsCommandList* pCommandList) const;
 
     DirectX::XMMATRIX   GetView()           const  { return mView;         }
     DirectX::XMMATRIX   GetProjection()     const  { return mProjection;   }

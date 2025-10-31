@@ -57,6 +57,15 @@ const ParameterDesc* MaterialType::GetParameter(const char* paramName) const
 	return &mParameters.at(index);
 }
 
+int32_t MaterialType::GetConstantBufferRootIndex(const char* cbName) const
+{
+    auto itFind = mCBNameToRootIndex.find(cbName);
+    if (itFind == mCBNameToRootIndex.end())
+        return CB_ROOTIDX_INVALID;
+
+    return itFind->second;
+}
+
 bool MaterialType::Generate(DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat)
 {
     ID3D12Device* pDevice = Muon::GetDevice();
@@ -148,7 +157,7 @@ bool MaterialType::GenerateRootSignature()
         }
     }
 
-    int rootParamIndex = 0;
+    UINT rootParamIndex = 0;
 
     // Add VS constant buffers
     for (const auto& cb : VSCBs)

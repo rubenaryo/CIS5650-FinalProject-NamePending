@@ -32,8 +32,8 @@ struct Buffer
 
 protected:
     Microsoft::WRL::ComPtr<ID3D12Resource> mpResource;
-    size_t mBufferSize = 0;
     std::wstring mName;
+    size_t mBufferSize = 0;
 };
 
 struct UploadBuffer : Buffer
