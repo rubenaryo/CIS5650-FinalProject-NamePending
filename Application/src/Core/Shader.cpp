@@ -8,6 +8,8 @@ Description : Implementations of Muon shader objects
 #include <Core/ThrowMacros.h>
 #include <Utils/Utils.h>
 
+#include <DirectXMath.h>
+
 namespace Muon
 {
 
@@ -36,6 +38,148 @@ static const char* kInstancedSemanticNames[] =
     "INSTANCE_BLENDWEIGHTS",
     "INSTANCE_WORLDMATRIX"
 };
+
+ParameterDesc::ParameterDesc(const char* name, ParameterType type)
+    : Name(name)
+    , Type(type)
+{
+}
+
+size_t GetParamTypeSize(ParameterType type)
+{
+    static size_t sParamSizes[] =
+    {
+        sizeof(int),
+        sizeof(float),
+        sizeof(DirectX::XMFLOAT2),
+        sizeof(DirectX::XMFLOAT3),
+        sizeof(DirectX::XMFLOAT4),
+    };
+    //static_assert(std::size(sParamSizes) == (UINT)ParameterType::Count);
+
+    return sParamSizes[(UINT)type];
+}
+
+// Helper to convert D3D type to ParameterType
+static ParameterType D3DTypeToParameterType(const D3D12_SHADER_TYPE_DESC& typeDesc)
+{
+    if (typeDesc.Class == D3D_SVC_SCALAR)
+    {
+        if (typeDesc.Type == D3D_SVT_FLOAT)
+            return ParameterType::Float;
+        else if (typeDesc.Type == D3D_SVT_INT)
+            return ParameterType::Int;
+    }
+    else if (typeDesc.Class == D3D_SVC_VECTOR)
+    {
+        if (typeDesc.Type == D3D_SVT_FLOAT)
+        {
+            switch (typeDesc.Columns)
+            {
+            case 2: return ParameterType::Float2;
+            case 3: return ParameterType::Float3;
+            case 4: return ParameterType::Float4;
+            }
+        }
+    }
+    else if (typeDesc.Class == D3D_SVC_MATRIX_COLUMNS || typeDesc.Class == D3D_SVC_MATRIX_ROWS)
+    {
+        if (typeDesc.Rows == 4 && typeDesc.Columns == 4)
+            return ParameterType::Matrix4x4;
+    }
+
+    return ParameterType::Invalid;
+}
+
+bool ParseReflectedResources(ID3D12ShaderReflection* pReflection, ShaderReflectionData& outShaderReflectionData)
+{
+    D3D12_SHADER_DESC shaderDesc;
+    pReflection->GetDesc(&shaderDesc);
+
+    // Reflect bound resources
+    for (UINT i = 0; i < shaderDesc.BoundResources; ++i)
+    {
+        D3D12_SHADER_INPUT_BIND_DESC bindDesc;
+        pReflection->GetResourceBindingDesc(i, &bindDesc);
+
+        ShaderResourceBinding resource;
+        resource.Name = bindDesc.Name;
+        resource.BindPoint = bindDesc.BindPoint;
+        resource.BindCount = bindDesc.BindCount;
+        resource.Space = bindDesc.Space;
+        resource.Size = 0;
+
+        switch (bindDesc.Type)
+        {
+        case D3D_SIT_CBUFFER:
+            resource.Type = ShaderResourceType::ConstantBuffer;
+            break;
+        case D3D_SIT_TEXTURE:
+            resource.Type = ShaderResourceType::Texture;
+            break;
+        case D3D_SIT_SAMPLER:
+            resource.Type = ShaderResourceType::Sampler;
+            break;
+        case D3D_SIT_UAV_RWTYPED:
+            resource.Type = ShaderResourceType::RWTexture;
+            break;
+        case D3D_SIT_STRUCTURED:
+            resource.Type = ShaderResourceType::StructuredBuffer;
+            break;
+        case D3D_SIT_UAV_RWSTRUCTURED:
+            resource.Type = ShaderResourceType::RWStructuredBuffer;
+            break;
+        default:
+            continue;
+        }
+
+        // If it's a constant buffer, reflect its contents
+        if (resource.Type == ShaderResourceType::ConstantBuffer)
+        {
+            ID3D12ShaderReflectionConstantBuffer* pCBReflection =
+                pReflection->GetConstantBufferByName(bindDesc.Name);
+
+            D3D12_SHADER_BUFFER_DESC cbDesc;
+            pCBReflection->GetDesc(&cbDesc);
+
+            ConstantBufferReflection cbReflection;
+            cbReflection.Name = bindDesc.Name;
+            cbReflection.BindPoint = bindDesc.BindPoint;
+            cbReflection.Space = bindDesc.Space;
+            cbReflection.Size = cbDesc.Size;
+
+            // Reflect variables
+            for (UINT v = 0; v < cbDesc.Variables; ++v)
+            {
+                ID3D12ShaderReflectionVariable* pVar = pCBReflection->GetVariableByIndex(v);
+                D3D12_SHADER_VARIABLE_DESC varDesc;
+                pVar->GetDesc(&varDesc);
+
+                ID3D12ShaderReflectionType* pType = pVar->GetType();
+                D3D12_SHADER_TYPE_DESC typeDesc;
+                pType->GetDesc(&typeDesc);
+
+                ParameterDesc param;
+                param.Name = varDesc.Name;
+                param.Offset = varDesc.StartOffset;
+                param.Type = D3DTypeToParameterType(typeDesc);
+                param.ConstantBufferName = bindDesc.Name;
+
+                if (param.Type != ParameterType::Invalid)
+                    cbReflection.Variables.push_back(param);
+            }
+
+            outShaderReflectionData.ConstantBuffers.push_back(cbReflection);
+
+            // Update resource size
+            resource.Size = cbDesc.Size;
+        }
+        outShaderReflectionData.Resources.push_back(resource);
+    }
+
+    outShaderReflectionData.IsReflected = true;
+    return true;
+}
 
 // Previously called AssignDXGIFormatsAndByteOffsets
 void PopulateInputElements(D3D12_INPUT_CLASSIFICATION slotClass,
@@ -188,12 +332,20 @@ bool VertexShader::Init(const wchar_t* path)
     HRESULT hr = D3DReadFileToBlob(path, this->ShaderBlob.GetAddressOf());
     COM_EXCEPT(hr);
 
+    if (FAILED(hr))
+        return false;
+
     Microsoft::WRL::ComPtr<ID3D12ShaderReflection> pReflection;
     hr = D3DReflect(ShaderBlob->GetBufferPointer(), ShaderBlob->GetBufferSize(),
         IID_ID3D12ShaderReflection, (void**)pReflection.GetAddressOf());
-    COM_EXCEPT(hr);
 
-    Initialized = BuildInputLayout(pReflection.Get(), ShaderBlob.Get(), this);
+    if (FAILED(hr))
+        return false;
+
+    if (!BuildInputLayout(pReflection.Get(), ShaderBlob.Get(), this))
+        return false;
+
+    Initialized = ParseReflectedResources(pReflection.Get(), this->ReflectionData);
     return SUCCEEDED(hr);
 }
 
@@ -228,6 +380,10 @@ bool VertexShader::Release()
     return released;
 }
 
+
+
+//////////////////////////////////////////////////////////////////////////////////
+
 PixelShader::PixelShader(const wchar_t* path)
 {
     Init(path);
@@ -238,7 +394,17 @@ bool PixelShader::Init(const wchar_t* path)
     HRESULT hr = D3DReadFileToBlob(path, this->ShaderBlob.GetAddressOf());
     COM_EXCEPT(hr);
 
-    Initialized = true;
+    if (FAILED(hr))
+        return false;
+
+    Microsoft::WRL::ComPtr<ID3D12ShaderReflection> pReflection;
+    hr = D3DReflect(ShaderBlob->GetBufferPointer(), ShaderBlob->GetBufferSize(),
+        IID_ID3D12ShaderReflection, (void**)pReflection.GetAddressOf());
+
+    if (FAILED(hr))
+        return false;
+
+    Initialized = ParseReflectedResources(pReflection.Get(), this->ReflectionData);
     return SUCCEEDED(hr);
 }
 
@@ -247,5 +413,6 @@ bool PixelShader::Release()
     // This will get filled out once we're dealing with samplers and such
     return true;
 }
+
 
 }

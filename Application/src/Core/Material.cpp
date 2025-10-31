@@ -11,12 +11,6 @@ Description : Implementation of custom material system
 namespace Muon
 {
 
-ParameterDesc::ParameterDesc(const char* name, ParameterType type)
-	:	Name(name)
-	,	Type(type)
-{
-}
-
 //////////
 
 MaterialType::MaterialType(const char* name)
@@ -85,21 +79,6 @@ bool MaterialInstance::SetParamValue(const char* paramName, ParameterValue value
 	mParamValues.reserve(index + 1);
 	mParamValues[index] = value;
 	return true;
-}
-
-size_t GetParamTypeSize(ParameterType type)
-{
-	static size_t sParamSizes[] =
-	{
-		sizeof(int),
-		sizeof(float),
-		sizeof(DirectX::XMFLOAT2),
-		sizeof(DirectX::XMFLOAT3),
-		sizeof(DirectX::XMFLOAT4),
-	};
-	static_assert(std::size(sParamSizes) == (UINT)ParameterType::Count);
-
-	return sParamSizes[(UINT)type];
 }
 
 }

@@ -42,7 +42,7 @@ bool Game::Init(HWND window, int width, int height)
     const VertexShader* pPhongVS = codex.GetVertexShader(kPhongVSID);
     const PixelShader* pPhongPS = codex.GetPixelShader(kPhongPSID);
 
-    mCamera.Init(DirectX::XMFLOAT3(5.0, 5.0, 5.0), width / (float)height, 0.1f, 1000.0f);
+    mCamera.Init(DirectX::XMFLOAT3(3.0, 3.0, 3.0), width / (float)height, 0.1f, 1000.0f);
 
     // Describe and create the graphics pipeline state object (PSO).
     mPSO.SetRootSignature(Muon::GetRootSignatureAddr());

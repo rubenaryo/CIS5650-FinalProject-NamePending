@@ -10,6 +10,7 @@ Description : Material class for shader information
 #include "CBufferStructs.h"
 
 #include <Core/PipelineState.h>
+#include <Core/Shader.h>
 #include <unordered_map>
 #include <string>
 
@@ -58,29 +59,6 @@ enum TextureSlotFlags : UINT
 //    cbMaterialParams            Description;
 //};
 
-// Note: When adding to this enum, make sure to add to the sParamSizes array below in GetParamTypeSize.
-enum class ParameterType
-{
-    Int = 0,
-    Float,
-    Float2,
-    Float3,
-    Float4,
-    Count,
-    Invalid
-};
-
-size_t GetParamTypeSize(ParameterType type);
-
-struct ParameterDesc
-{
-    ParameterDesc(const char* name, ParameterType type);
-
-    std::string Name;
-    ParameterType Type = ParameterType::Invalid;
-    UINT Index = 0;
-    UINT Offset = 0;
-};
 
 struct ParameterValue
 {

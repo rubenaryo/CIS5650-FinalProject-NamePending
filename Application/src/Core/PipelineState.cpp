@@ -66,6 +66,13 @@ bool GraphicsPipelineState::Generate()
 	if (!GetDevice())
 		return false;
 
+    D3D12_RASTERIZER_DESC rasterDesc = {};
+    rasterDesc.FillMode = D3D12_FILL_MODE_WIREFRAME;
+    rasterDesc.CullMode = D3D12_CULL_MODE_NONE;
+    rasterDesc.DepthClipEnable = TRUE;
+
+    mDesc.RasterizerState = rasterDesc;
+
 	HRESULT hr = GetDevice()->CreateGraphicsPipelineState(&mDesc, IID_PPV_ARGS(&mpPipelineState));
 	COM_EXCEPT(hr);
 
