@@ -50,16 +50,14 @@ public:
 
     static ResourceCodex& GetSingleton();
 
-    //const Mesh* GetMesh(MeshID UID) const;
     const Mesh* GetMesh(MeshID UID) const;
-    //const Material* GetMaterial(uint8_t materialIndex) const;
-    //const ResourceBindChord* GetTexture(TextureID UID) const;
+    
     const VertexShader* GetVertexShader(ShaderID UID) const;
     const PixelShader* GetPixelShader(ShaderID UID) const;
+    const MaterialType* GetMaterialType(MaterialTypeID UID) const;
     Muon::UploadBuffer& GetStagingBuffer() { return mMeshStagingBuffer; }
 
 private:
-
     std::unordered_map<ShaderID, VertexShader>  mVertexShaders;
     std::unordered_map<ShaderID, PixelShader>   mPixelShaders;
     std::unordered_map<MeshID, Mesh>            mMeshMap;

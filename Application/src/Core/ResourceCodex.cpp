@@ -145,6 +145,14 @@ const PixelShader* ResourceCodex::GetPixelShader(ShaderID UID) const
         return nullptr;
 }
 
+const MaterialType* ResourceCodex::GetMaterialType(MaterialTypeID UID) const
+{
+    if (mMaterialTypeMap.find(UID) != mMaterialTypeMap.end())
+        return &mMaterialTypeMap.at(UID);
+    else
+        return nullptr;
+}
+
 void ResourceCodex::AddVertexShader(ShaderID hash, const wchar_t* path)
 {   
     mVertexShaders.emplace(hash, path);

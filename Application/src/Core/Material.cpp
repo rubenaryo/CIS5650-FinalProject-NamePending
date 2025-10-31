@@ -22,8 +22,19 @@ MaterialType::MaterialType(const char* name)
 
 void MaterialType::Destroy()
 {
-    mRootSignature.Reset();
-    mPipelineState.Reset();
+    mpRootSignature.Reset();
+    mpPipelineState.Reset();
+}
+
+bool MaterialType::Bind(ID3D12GraphicsCommandList* pCommandList) const
+{
+    if (!mpRootSignature || !mpPipelineState)
+        return false;
+
+    pCommandList->SetGraphicsRootSignature(mpRootSignature.Get());
+    pCommandList->SetPipelineState(mpPipelineState.Get());
+
+    return true;
 }
 
 void MaterialType::SetVertexShader(const VertexShader* vs)
@@ -92,7 +103,7 @@ bool MaterialType::MergeShaderResources()
             ParameterDesc param = var;
             param.Index = paramIndex;
             mParameters.push_back(param);
-            mParamNameToIndex[param.Name.c_str()] = paramIndex;
+            mParamNameToIndex[param.Name] = paramIndex;
             paramIndex++;
         }
     }
@@ -108,15 +119,11 @@ bool MaterialType::GenerateRootSignature()
     mCBNameToRootIndex.clear();
 
     // Organize resources by type and shader stage
-    struct ResourceGroup {
-        std::vector<ShaderResourceBinding> VSCBs;
-        std::vector<ShaderResourceBinding> PSCBs;
-        std::vector<ShaderResourceBinding> VSSRVs;
-        std::vector<ShaderResourceBinding> PSSRVs;
-        std::vector<ShaderResourceBinding> Samplers;
-    };
-
-    ResourceGroup groups;
+    std::vector<ShaderResourceBinding> VSCBs;
+    std::vector<ShaderResourceBinding> PSCBs;
+    std::vector<ShaderResourceBinding> VSSRVs;
+    std::vector<ShaderResourceBinding> PSSRVs;
+    std::vector<ShaderResourceBinding> Samplers;
 
     // Categorize resources
     for (size_t i = 0; i < mResources.size(); ++i)
@@ -127,16 +134,16 @@ bool MaterialType::GenerateRootSignature()
         switch (res.Type)
         {
         case ShaderResourceType::ConstantBuffer:
-            if (isVS) groups.VSCBs.push_back(res);
-            else groups.PSCBs.push_back(res);
+            if (isVS) VSCBs.push_back(res);
+            else PSCBs.push_back(res);
             break;
         case ShaderResourceType::Texture:
         case ShaderResourceType::StructuredBuffer:
-            if (isVS) groups.VSSRVs.push_back(res);
-            else groups.PSSRVs.push_back(res);
+            if (isVS) VSSRVs.push_back(res);
+            else PSSRVs.push_back(res);
             break;
         case ShaderResourceType::Sampler:
-            groups.Samplers.push_back(res);
+            Samplers.push_back(res);
             break;
         }
     }
@@ -144,24 +151,24 @@ bool MaterialType::GenerateRootSignature()
     int rootParamIndex = 0;
 
     // Add VS constant buffers
-    for (const auto& cb : groups.VSCBs)
+    for (const auto& cb : VSCBs)
     {
         builder.AddConstantBufferView(cb.BindPoint, cb.Space, D3D12_SHADER_VISIBILITY_VERTEX);
         mCBNameToRootIndex[cb.Name] = rootParamIndex++;
     }
 
     // Add PS constant buffers
-    for (const auto& cb : groups.PSCBs)
+    for (const auto& cb : PSCBs)
     {
         builder.AddConstantBufferView(cb.BindPoint, cb.Space, D3D12_SHADER_VISIBILITY_PIXEL);
         mCBNameToRootIndex[cb.Name] = rootParamIndex++;
     }
 
     // Add PS textures as descriptor table
-    if (!groups.PSSRVs.empty())
+    if (!PSSRVs.empty())
     {
         std::vector<D3D12_DESCRIPTOR_RANGE> ranges;
-        for (const auto& srv : groups.PSSRVs)
+        for (const auto& srv : PSSRVs)
         {
             D3D12_DESCRIPTOR_RANGE range = {};
             range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
@@ -176,7 +183,7 @@ bool MaterialType::GenerateRootSignature()
     }
 
     // Add static samplers
-    for (const auto& sampler : groups.Samplers)
+    for (const auto& sampler : Samplers)
     {
         D3D12_STATIC_SAMPLER_DESC samplerDesc = {};
         samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -196,7 +203,7 @@ bool MaterialType::GenerateRootSignature()
         builder.AddStaticSampler(samplerDesc);
     }
 
-    return builder.Build(pDevice, mRootSignature.GetAddressOf());
+    return builder.Build(pDevice, mpRootSignature.GetAddressOf());
 }
 
 bool MaterialType::GeneratePipelineState(DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvFormat)
@@ -204,15 +211,13 @@ bool MaterialType::GeneratePipelineState(DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvF
     ID3D12Device* pDevice = Muon::GetDevice();
 
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-    psoDesc.pRootSignature = mRootSignature.Get();
+    psoDesc.pRootSignature = mpRootSignature.Get();
 
     // Vertex Shader 
-    psoDesc.VS.pShaderBytecode = mpVS->ShaderBlob->GetBufferPointer();
-    psoDesc.VS.BytecodeLength = mpVS->ShaderBlob->GetBufferSize();
+    psoDesc.VS = CD3DX12_SHADER_BYTECODE(mpVS->ShaderBlob.Get());
     
     // Pixel Shader
-    psoDesc.PS.pShaderBytecode = mpPS->ShaderBlob->GetBufferPointer();
-    psoDesc.PS.BytecodeLength = mpPS->ShaderBlob->GetBufferSize();
+    psoDesc.PS = CD3DX12_SHADER_BYTECODE(mpPS->ShaderBlob.Get());
 
     // Input layout
     psoDesc.InputLayout.pInputElementDescs = mpVS->InputElements.data();
@@ -228,18 +233,18 @@ bool MaterialType::GeneratePipelineState(DXGI_FORMAT rtvFormat, DXGI_FORMAT dsvF
     psoDesc.BlendState.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
     // Depth stencil state
-    psoDesc.DepthStencilState.DepthEnable = TRUE;
+    psoDesc.DepthStencilState.DepthEnable = FALSE; // TODO: Enable this when we want to do depth testing
     psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
     psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
 
     // Render target formats
     psoDesc.NumRenderTargets = 1;
     psoDesc.RTVFormats[0] = rtvFormat;
-    psoDesc.DSVFormat = dsvFormat;
     psoDesc.SampleDesc.Count = 1;
+    psoDesc.SampleMask = UINT_MAX;  // Enable all samples
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
 
-    HRESULT hr = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mPipelineState));
+    HRESULT hr = pDevice->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&mpPipelineState));
     return SUCCEEDED(hr);
 }
 

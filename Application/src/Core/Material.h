@@ -78,6 +78,8 @@ public:
     MaterialType(const char* name);
     void Destroy();
 
+    bool Bind(ID3D12GraphicsCommandList* pCommandList) const;
+
     const std::string& GetName() const { return mName; }
     void SetVertexShader(const VertexShader* vs);
     void SetPixelShader(const PixelShader* ps);
@@ -88,7 +90,7 @@ public:
     const std::vector<ConstantBufferReflection>& GetConstantBuffers() const { return mConstantBuffers; }
 
     bool Generate(DXGI_FORMAT rtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM,
-        DXGI_FORMAT dsvFormat = DXGI_FORMAT_D32_FLOAT);
+        DXGI_FORMAT dsvFormat = DXGI_FORMAT_D24_UNORM_S8_UINT);
 
 protected:
     bool MergeShaderResources();
@@ -102,11 +104,11 @@ protected:
     std::vector<ConstantBufferReflection> mConstantBuffers;
     std::vector<ParameterDesc> mParameters;
 
-    std::unordered_map<const char*, size_t> mParamNameToIndex;
+    std::unordered_map<std::string, size_t> mParamNameToIndex;
     std::unordered_map<std::string, int> mCBNameToRootIndex;
 
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> mRootSignature;
-    Microsoft::WRL::ComPtr<ID3D12PipelineState> mPipelineState;
+    Microsoft::WRL::ComPtr<ID3D12RootSignature> mpRootSignature;
+    Microsoft::WRL::ComPtr<ID3D12PipelineState> mpPipelineState;
 
     std::string mName;
 

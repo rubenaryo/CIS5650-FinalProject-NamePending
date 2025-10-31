@@ -44,18 +44,6 @@ bool Game::Init(HWND window, int width, int height)
 
     mCamera.Init(DirectX::XMFLOAT3(3.0, 3.0, 3.0), width / (float)height, 0.1f, 1000.0f);
 
-    // Describe and create the graphics pipeline state object (PSO).
-    mPSO.SetRootSignature(Muon::GetRootSignatureAddr());
-    mPSO.SetVertexShader(*pVS);
-    mPSO.SetPixelShader(*pPS);
-    success &= mPSO.Generate();
-
-    // Describe a 3d pso
-    mPhongPSO.SetRootSignature(Muon::GetPhongRootSignatureAddr());
-    mPhongPSO.SetVertexShader(*pPhongVS);
-    mPhongPSO.SetPixelShader(*pPhongPS);
-    success &= mPhongPSO.Generate();
-
     struct Vertex
     {
         float Pos[4];
@@ -137,7 +125,7 @@ bool Game::Init(HWND window, int width, int height)
     };
 
     //Muon::ResetCommandList(mPSO.GetPipelineState());
-    Muon::ResetCommandList(mPhongPSO.GetPipelineState());
+    Muon::ResetCommandList(nullptr);
     Muon::UploadBuffer& stagingBuffer = codex.GetStagingBuffer();
     stagingBuffer.Map();
     Muon::MeshFactory::LoadAllMeshes(codex);
@@ -187,21 +175,25 @@ void Game::Render()
         return;
     }
 
-    ResetCommandList(mPSO.GetPipelineState());
+    ResetCommandList(nullptr);
     PrepareForRender();
-    //mPSO.Bind();
-
-    mPhongPSO.Bind();       
-    mCamera.Bind(GetCommandList());
-    GetCommandList()->SetGraphicsRootConstantBufferView(1, mWorldMatrixBuffer.GetGPUVirtualAddress());
 
     ResourceCodex& codex = ResourceCodex::GetSingleton();
+    MaterialTypeID matId = fnv1a("Phong");
+    const Muon::MaterialType* pPhongMaterial = codex.GetMaterialType(matId);
+    if (pPhongMaterial)
+    {
+        pPhongMaterial->Bind(GetCommandList());
+    }
+
+    mCamera.Bind(GetCommandList());
+    GetCommandList()->SetGraphicsRootConstantBufferView(1, mWorldMatrixBuffer.GetGPUVirtualAddress());
+;
     const MeshID cubeID = fnv1a("cube.obj");
     const Mesh* cubeMesh = codex.GetMesh(cubeID);
     if (cubeMesh)
     {
         mCube.Draw(Muon::GetCommandList());
-        //cubeMesh->Draw(GetCommandList());
     }
 
     FinalizeRender();
@@ -226,8 +218,6 @@ Game::~Game()
 { 
     mTriangle.Release();
     mCube.Release();
-    mPSO.Destroy();
-    mPhongPSO.Destroy();
     mWorldMatrixBuffer.TryDestroy();
     mCamera.Destroy();
     mInput.Destroy();

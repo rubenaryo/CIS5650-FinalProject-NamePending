@@ -65,19 +65,11 @@ namespace Muon
     D3D_FEATURE_LEVEL gFeatureLevel;
     const wchar_t* gFeatureLevelStr = nullptr;
 
-    // TODO: Move these to the main application and generalize them. 
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> gRootSig;
-    Microsoft::WRL::ComPtr<ID3D12RootSignature> gPhongRootSig;
-
     /////////////////////////////////////////////////////////////////////
     // Accessors
 
     ID3D12Device* GetDevice() { return gDevice.Get(); }
     ID3D12Fence* GetFence() { return gFence.Get(); }
-    ID3D12RootSignature* GetRootSignature() { return gRootSig.Get(); }
-    ID3D12RootSignature** GetRootSignatureAddr() { return gRootSig.GetAddressOf(); }
-    ID3D12RootSignature* GetPhongRootSignature() { return gPhongRootSig.Get(); }
-    ID3D12RootSignature** GetPhongRootSignatureAddr() { return gPhongRootSig.GetAddressOf(); }
     UINT GetRTVDescriptorSize() { return gRTVSize; }
     UINT GetDSVDescriptorSize() { return gDSVSize; }
     UINT GetCBVDescriptorSize() { return gCBVSize; }
@@ -788,13 +780,6 @@ namespace Muon
         success &= SetScissorRects(GetCommandList(), 0, 0, width, height);
         CHECK_SUCCESS(success, "Error: Failed to set scissor rects!\n");
 
-        // TODO: Move this to the application and generalize it.
-        success &= CreateRootSig(GetDevice(), gRootSig);
-        CHECK_SUCCESS(success, "Error: Failed to create root signature.\n");
-
-        success &= CreatePhongRootSig(GetDevice(), gPhongRootSig);
-        CHECK_SUCCESS(success, "Error: Failed to create phong root signature.\n");
-
         // We've written a bunch of commands, close the list and execute it.
         hr = GetCommandList()->Close();
         COM_EXCEPT(hr);
@@ -845,8 +830,6 @@ namespace Muon
         gDepthStencilBuffer.Reset();
         gRTVHeap.Reset();
         gDSVHeap.Reset();
-        gRootSig.Reset();
-        gPhongRootSig.Reset();
         gCommandList.Reset();
         gCommandAllocator.Reset();
         gCommandQueue.Reset();
