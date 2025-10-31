@@ -6,7 +6,6 @@ Description : Wrapper for Vertex/Pixel/other shader code
 #ifndef SHADER_H
 #define SHADER_H
 
-#include "DXCore.h"
 #include "ThrowMacros.h"
 
 #include <vector>
@@ -58,8 +57,6 @@ struct ParameterDesc
     UINT Offset = 0;
     std::string ConstantBufferName; // Which CB this belongs to
 };
-
-size_t GetParamTypeSize(ParameterType type);
 
 struct ConstantBufferReflection
 {
