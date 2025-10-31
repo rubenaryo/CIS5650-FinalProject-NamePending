@@ -140,6 +140,8 @@ bool Game::Init(HWND window, int width, int height)
     memcpy(mapped, &entity, sizeof(entity));
     mWorldMatrixBuffer.Unmap(0, mWorldMatrixBuffer.GetBufferSize());
 
+    mLightBuffer.Create(L"Light Buffer", sizeof(cbLights));
+
     Muon::CloseCommandList();
     Muon::ExecuteCommandList();
     return success;
@@ -163,6 +165,19 @@ void Game::Update(Muon::StepTimer const& timer)
     float elapsedTime = float(timer.GetElapsedSeconds());
     mInput.Frame(elapsedTime, &mCamera);
     mCamera.UpdateView();
+
+    Muon::cbLights lights;
+
+    lights.ambientColor = DirectX::XMFLOAT3(1, 1, 1);
+
+    lights.directionalLight.diffuseColor = DirectX::XMFLOAT3(1, 1, 1);
+    lights.directionalLight.dir = DirectX::XMFLOAT3(cos(elapsedTime), 0.0, sin(elapsedTime));
+
+    DirectX::XMStoreFloat3(&lights.cameraWorldPos, mCamera.GetPosition());
+
+    void* mapped = mLightBuffer.Map();
+    memcpy(mapped, &lights, sizeof(Muon::cbLights));
+    mLightBuffer.Unmap(0, mLightBuffer.GetBufferSize());
 }
 
 void Game::Render()
@@ -199,6 +214,12 @@ void Game::Render()
         if (worldMatrixRootIdx != CB_ROOTIDX_INVALID)
         {
             GetCommandList()->SetGraphicsRootConstantBufferView(worldMatrixRootIdx, mWorldMatrixBuffer.GetGPUVirtualAddress());
+        }
+
+        int32_t lightsRootIdx = pPhongMaterial->GetConstantBufferRootIndex("PSLights");
+        if (lightsRootIdx != CB_ROOTIDX_INVALID)
+        {
+            GetCommandList()->SetGraphicsRootConstantBufferView(lightsRootIdx, mLightBuffer.GetGPUVirtualAddress());
         }
     }
 
