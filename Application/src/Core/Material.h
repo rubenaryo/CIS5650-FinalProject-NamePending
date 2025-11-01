@@ -10,6 +10,7 @@ Description : Material class for shader information
 #include "CBufferStructs.h"
 
 #include <Core/Buffers.h>
+#include <Core/CommonTypes.h>
 #include <Core/PipelineState.h>
 #include <Core/Shader.h>
 #include <unordered_map>
@@ -72,7 +73,7 @@ struct ParameterValue
     };
 };
 
-static const int32_t CB_ROOTIDX_INVALID = -1;
+static const int32_t ROOTIDX_INVALID = -1;
 
 // Material types define the required parameters, shaders, and hold the underlying pipeline state.
 class MaterialType
@@ -86,7 +87,6 @@ public:
     const std::wstring& GetName() const { return mName; }
     void SetVertexShader(const VertexShader* vs);
     void SetPixelShader(const PixelShader* ps);
-    //void AddParameter(const char* paramName, ParameterType type);
     
     const std::vector<ParameterDesc>& GetAllParameters() const { return mParameters; }
     const ParameterDesc* GetParameter(const char* paramName) const;
@@ -94,8 +94,10 @@ public:
     void SetMaterialParams(cbMaterialParams& params) { mMaterialParams = params; }
     bool PopulateMaterialParams(UploadBuffer& stagingBuffer, ID3D12GraphicsCommandList* pCommandList);
 
+    bool SetTextureParam(const char* paramName, TextureID texId);
+
     const std::vector<ConstantBufferReflection>& GetConstantBuffers() const { return mConstantBuffers; }
-    int GetConstantBufferRootIndex(const char* cbName) const;
+    int GetResourceRootIndex(const char* name) const;
 
     bool Generate(DXGI_FORMAT rtvFormat = DXGI_FORMAT_R8G8B8A8_UNORM,
         DXGI_FORMAT dsvFormat = DXGI_FORMAT_D24_UNORM_S8_UINT);
@@ -113,7 +115,8 @@ protected:
     std::vector<ParameterDesc> mParameters;
 
     std::unordered_map<std::string, size_t> mParamNameToIndex;
-    std::unordered_map<std::string, int32_t> mCBNameToRootIndex;
+    std::unordered_map<std::string, int32_t> mResourceNameToRootIndex;
+    std::unordered_map<std::string, TextureID> mTextureParams;
 
     Microsoft::WRL::ComPtr<ID3D12RootSignature> mpRootSignature;
     Microsoft::WRL::ComPtr<ID3D12PipelineState> mpPipelineState;

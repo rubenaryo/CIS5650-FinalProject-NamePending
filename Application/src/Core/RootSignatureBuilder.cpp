@@ -28,12 +28,14 @@ void RootSignatureBuilder::AddConstantBufferView(UINT shaderRegister, UINT space
 
 void RootSignatureBuilder::AddShaderResourceView(UINT shaderRegister, UINT space, D3D12_SHADER_VISIBILITY visibility)
 {
-    D3D12_ROOT_PARAMETER param = {};
-    param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_SRV;
-    param.ShaderVisibility = visibility;
-    param.Descriptor.ShaderRegister = shaderRegister;
-    param.Descriptor.RegisterSpace = space;
-    mParameters.push_back(param);
+    D3D12_DESCRIPTOR_RANGE srvRange = {};
+    srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    srvRange.NumDescriptors = 1;
+    srvRange.BaseShaderRegister = shaderRegister;
+    srvRange.RegisterSpace = space;
+    srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+
+    AddDescriptorTable(&srvRange, 1, visibility);
 }
 
 void RootSignatureBuilder::AddDescriptorTable(const D3D12_DESCRIPTOR_RANGE* ranges, UINT numRanges, D3D12_SHADER_VISIBILITY visibility)

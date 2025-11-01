@@ -32,9 +32,9 @@ struct alignas(16) DirectionalLight
 
 struct alignas(16) cbLights
 {
-    DirectX::XMFLOAT3 ambientColor;
+    DirectX::XMFLOAT3A ambientColor;
     DirectionalLight directionalLight;
-    DirectX::XMFLOAT3 cameraWorldPos;
+    DirectX::XMFLOAT3A cameraWorldPos;
 };
 
 struct alignas(16) cbMaterialParams

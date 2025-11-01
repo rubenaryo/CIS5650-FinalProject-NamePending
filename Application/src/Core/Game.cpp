@@ -169,10 +169,10 @@ void Game::Update(Muon::StepTimer const& timer)
 
     Muon::cbLights lights;
 
-    lights.ambientColor = DirectX::XMFLOAT3(1, 1, 1);
+    lights.ambientColor = DirectX::XMFLOAT3A(+1.0f, +0.772f, +0.56f);
 
-    lights.directionalLight.diffuseColor = DirectX::XMFLOAT3(1, 1, 1);
-    lights.directionalLight.dir = DirectX::XMFLOAT3(cos(elapsedTime), 0.0, sin(elapsedTime));
+    lights.directionalLight.diffuseColor = DirectX::XMFLOAT3A(1, 1, 1);
+    lights.directionalLight.dir = DirectX::XMFLOAT3A(cos(elapsedTime), 0.0, sin(elapsedTime));
 
     DirectX::XMStoreFloat3(&lights.cameraWorldPos, mCamera.GetPosition());
 
@@ -204,21 +204,21 @@ void Game::Render()
         pPhongMaterial->Bind(GetCommandList());
         
         // Bind the Camera's Upload Buffer to the root index known by the material
-        int32_t cameraRootIdx = pPhongMaterial->GetConstantBufferRootIndex("VSCamera");
-        if (cameraRootIdx != CB_ROOTIDX_INVALID)
+        int32_t cameraRootIdx = pPhongMaterial->GetResourceRootIndex("VSCamera");
+        if (cameraRootIdx != ROOTIDX_INVALID)
         {
             mCamera.Bind(cameraRootIdx, GetCommandList());
         }
 
         // Bind the world matrix Upload Buffer to the root index known by the material
-        int32_t worldMatrixRootIdx = pPhongMaterial->GetConstantBufferRootIndex("VSWorld");
-        if (worldMatrixRootIdx != CB_ROOTIDX_INVALID)
+        int32_t worldMatrixRootIdx = pPhongMaterial->GetResourceRootIndex("VSWorld");
+        if (worldMatrixRootIdx != ROOTIDX_INVALID)
         {
             GetCommandList()->SetGraphicsRootConstantBufferView(worldMatrixRootIdx, mWorldMatrixBuffer.GetGPUVirtualAddress());
         }
 
-        int32_t lightsRootIdx = pPhongMaterial->GetConstantBufferRootIndex("PSLights");
-        if (lightsRootIdx != CB_ROOTIDX_INVALID)
+        int32_t lightsRootIdx = pPhongMaterial->GetResourceRootIndex("PSLights");
+        if (lightsRootIdx != ROOTIDX_INVALID)
         {
             GetCommandList()->SetGraphicsRootConstantBufferView(lightsRootIdx, mLightBuffer.GetGPUVirtualAddress());
         }

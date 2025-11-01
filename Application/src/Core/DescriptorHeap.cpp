@@ -11,6 +11,10 @@ namespace Muon
 
 DescriptorHeap::~DescriptorHeap()
 {
+}
+
+void DescriptorHeap::Destroy()
+{
     mHeap.Reset();
 }
 

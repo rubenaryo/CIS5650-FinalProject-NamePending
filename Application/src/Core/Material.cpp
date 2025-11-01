@@ -6,6 +6,7 @@ Description : Implementation of custom material system
 #include "Material.h"
 
 #include <Core/PipelineState.h>
+#include <Core/ResourceCodex.h>
 #include <Core/RootSignatureBuilder.h>
 #include <Core/Shader.h>
 #include <Core/ShaderUtils.h>
@@ -35,10 +36,26 @@ bool MaterialType::Bind(ID3D12GraphicsCommandList* pCommandList) const
     pCommandList->SetGraphicsRootSignature(mpRootSignature.Get());
     pCommandList->SetPipelineState(mpPipelineState.Get());
 
-    int32_t materialParamsRootIndex = GetConstantBufferRootIndex("PSPerMaterial");
-    if (materialParamsRootIndex != CB_ROOTIDX_INVALID)
+    int32_t materialParamsRootIndex = GetResourceRootIndex("PSPerMaterial");
+    if (materialParamsRootIndex != ROOTIDX_INVALID)
     {
         pCommandList->SetGraphicsRootConstantBufferView(materialParamsRootIndex, mMaterialParamsBuffer.GetGPUVirtualAddress());
+    }
+
+    ResourceCodex& codex = ResourceCodex::GetSingleton();
+    for (auto texPair : mTextureParams)
+    {
+        TextureID texId = texPair.second;
+        const Texture* pTex = codex.GetTexture(texId);
+        if (!pTex || !pTex->pResource)
+            continue;
+
+        int32_t texRootParamIndex = GetResourceRootIndex(texPair.first.c_str());
+        if (texRootParamIndex == ROOTIDX_INVALID)
+            continue;
+
+        pCommandList->SetDescriptorHeaps(1, codex.GetSRVDescriptorHeap().GetHeapAddr());
+        pCommandList->SetGraphicsRootDescriptorTable(texRootParamIndex, pTex->GPUHandle);
     }
 
     return true;
@@ -69,11 +86,21 @@ bool MaterialType::PopulateMaterialParams(UploadBuffer& stagingBuffer, ID3D12Gra
     return mMaterialParamsBuffer.Populate(&mMaterialParams, sizeof(cbMaterialParams), stagingBuffer, pCommandList);
 }
 
-int32_t MaterialType::GetConstantBufferRootIndex(const char* cbName) const
+bool MaterialType::SetTextureParam(const char* paramName, TextureID texId)
 {
-    auto itFind = mCBNameToRootIndex.find(cbName);
-    if (itFind == mCBNameToRootIndex.end())
-        return CB_ROOTIDX_INVALID;
+    // Validate that the param actually exists.
+    if (GetResourceRootIndex(paramName) == ROOTIDX_INVALID)
+        return false;
+
+    mTextureParams[paramName] = texId;
+    return true;
+}
+
+int32_t MaterialType::GetResourceRootIndex(const char* name) const
+{
+    auto itFind = mResourceNameToRootIndex.find(name);
+    if (itFind == mResourceNameToRootIndex.end())
+        return ROOTIDX_INVALID;
 
     return itFind->second;
 }
@@ -140,7 +167,7 @@ bool MaterialType::GenerateRootSignature()
     ID3D12Device* pDevice = Muon::GetDevice();
 
     RootSignatureBuilder builder;
-    mCBNameToRootIndex.clear();
+    mResourceNameToRootIndex.clear();
 
     // Organize resources by type and shader stage
     std::vector<ShaderResourceBinding> VSCBs;
@@ -178,32 +205,21 @@ bool MaterialType::GenerateRootSignature()
     for (const auto& cb : VSCBs)
     {
         builder.AddConstantBufferView(cb.BindPoint, cb.Space, D3D12_SHADER_VISIBILITY_VERTEX);
-        mCBNameToRootIndex[cb.Name] = rootParamIndex++;
+        mResourceNameToRootIndex[cb.Name] = rootParamIndex++;
     }
 
     // Add PS constant buffers
     for (const auto& cb : PSCBs)
     {
         builder.AddConstantBufferView(cb.BindPoint, cb.Space, D3D12_SHADER_VISIBILITY_PIXEL);
-        mCBNameToRootIndex[cb.Name] = rootParamIndex++;
+        mResourceNameToRootIndex[cb.Name] = rootParamIndex++;
     }
 
-    // Add PS textures as descriptor table
-    if (!PSSRVs.empty())
+    // Add PS textures as unique SRVs
+    for (const auto& srv : PSSRVs)
     {
-        std::vector<D3D12_DESCRIPTOR_RANGE> ranges;
-        for (const auto& srv : PSSRVs)
-        {
-            D3D12_DESCRIPTOR_RANGE range = {};
-            range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-            range.NumDescriptors = srv.BindCount;
-            range.BaseShaderRegister = srv.BindPoint;
-            range.RegisterSpace = srv.Space;
-            range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-            ranges.push_back(range);
-        }
-        builder.AddDescriptorTable(ranges.data(), static_cast<UINT>(ranges.size()), D3D12_SHADER_VISIBILITY_PIXEL);
-        rootParamIndex++;
+        builder.AddShaderResourceView(srv.BindPoint, srv.Space, D3D12_SHADER_VISIBILITY_PIXEL);
+        mResourceNameToRootIndex[srv.Name] = rootParamIndex++;
     }
 
     // Add static samplers

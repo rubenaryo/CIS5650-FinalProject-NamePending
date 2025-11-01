@@ -16,6 +16,7 @@
 #include <filesystem>
 #include <DDSTextureLoader.h>
 #include <WICTextureLoader.h>
+#include <ResourceUploadBatch.h>
 
 #include <Core/DXCore.h>
 #include <Utils/Utils.h>
@@ -216,65 +217,95 @@ void TextureFactory::LoadAllTextures(ID3D12Device* pDevice, ID3D12CommandList* p
     namespace fs = std::filesystem;
     std::string texturePath = TEXTUREPATH;
 
-    #if defined(MN_DEBUG)
-    if(!fs::exists(texturePath))
+#if defined(MN_DEBUG)
+    if (!fs::exists(texturePath))
         throw std::exception("Textures folder doesn't exist!");
-    #endif
-    
-    // Iterate through folder and initialize materials
+#endif
+
+    // NOTE: This has a known memory leak in the DXTK
+    DirectX::ResourceUploadBatch* pResourceUpload = new DirectX::ResourceUploadBatch(pDevice);
+
+    pResourceUpload->Begin();
+
     for (const auto& entry : fs::directory_iterator(texturePath))
     {
         std::wstring path = entry.path().c_str();
         std::wstring name = entry.path().filename().c_str();
 
-        // Parse file name to decide how to create this resource
         size_t pos = name.find(L'_');
         const std::wstring TexName = name.substr(0, pos++);
         const std::wstring TexType = name.substr(pos, 1);
-        
-        // Parse file extension
-        pos = name.find(L'.') + 1;
-        const std::wstring TexExt  = name.substr(pos);
-        
-        HRESULT hr = E_FAIL;
 
-        // Special Case: DDS Files (Cube maps with no mipmaps)
-        if (TexExt == L"dds")
+        pos = name.find(L'.') + 1;
+        const std::wstring TexExt = name.substr(pos);
+
+        if (TexExt != L"png")
+            continue;
+
+        TextureID tid = fnv1a(name.c_str());
+        Texture& tex = codex.InsertTexture(tid);
+
+        HRESULT hr = DirectX::CreateWICTextureFromFile(
+            pDevice,
+            *pResourceUpload,
+            path.c_str(),
+            tex.pResource.GetAddressOf()
+        );
+
+        if (FAILED(hr))
         {
-            //hr = DirectX::CreateDDSTextureFromFile(
-            //    device,
-            //    path.c_str(),
-            //    &dummy,
-            //    &pSRV);
-        } 
-        else // For most textures, use WIC with mipmaps
-        {
-            //hr = DirectX::CreateWICTextureFromFile(
-            //    device, context,    // Passing in the context auto generates mipmaps
-            //    path.c_str(),
-            //    &dummy,
-            //    &pSRV);
-            
+            Muon::Printf(L"Error: Failed to load texture %s: 0x%08X\n", path.c_str(), hr);
+            continue;
         }
 
-        //TextureID tid = fnv1a(TexName.c_str());
-        //codex.InsertTexture(tid, slot, pSRV);
+        if (!CreateSRV(codex.GetSRVDescriptorHeap(), pDevice, tex.pResource.Get(), tex))
+        {
+            Muon::Printf(L"Error: Failed to create D3D12 Resource and SRV for %s!\n", path.c_str());
+            continue;
+        }
     }
+
+    auto uploadResourcesFinished = pResourceUpload->End(Muon::GetCommandQueue());
+    uploadResourcesFinished.wait();
+
+    delete pResourceUpload;
+    FlushCommandQueue();
+}
+
+bool TextureFactory::CreateSRV(DescriptorHeap& descHeap, ID3D12Device* pDevice, ID3D12Resource* pResource, Texture& outTexture)
+{
+    if (!pResource)
+        return false;
+
+    // Allocate descriptor
+    if (!descHeap.Allocate(outTexture.CPUHandle, outTexture.GPUHandle))
+        return false;
+
+    D3D12_RESOURCE_DESC resourceDesc = pResource->GetDesc();
+    outTexture.Width = static_cast<UINT>(resourceDesc.Width);
+    outTexture.Height = resourceDesc.Height;
+    outTexture.Format = resourceDesc.Format;
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = resourceDesc.Format;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = resourceDesc.MipLevels;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+
+    pDevice->CreateShaderResourceView(pResource, &srvDesc, outTexture.CPUHandle);
+
+    return true;
 }
 
 bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
 {
-    const uint32_t kLunarId = fnv1a(L"Lunar");       // FNV1A of L"Lunar"
+    const TextureID kRockDiffuseId = fnv1a(L"Rock_T.png");       // FNV1A of L"Lunar_T"
+    const TextureID kRockNormalId = fnv1a(L"Rock_N.png");       // FNV1A of L"Lunar_T"
 
     const ShaderID kPhongVSID = fnv1a("PhongVS.cso");
-    const ShaderID kInstancedPhongVSID = 0xc8a366aa; // FNV1A of L"InstancedPhongVS.cso"
     const ShaderID kPhongPSID = 0x4dc6e249;          // FNV1A of L"PhongPS.cso"
     const ShaderID kPhongPSNormalMapID = fnv1a(L"Phong_NormalMapPS.cso");
-    const ShaderID kWireFramePSID = fnv1a(L"WireframePS.cso");
-    const ShaderID kSkyVSID = 0xeb5accd4;         // fnv1a L"SkyVS.cso"
-    const ShaderID kSkyPSID = 0x6ec235e6;         // fnv1a L"SkyPS.cso"
-    const TextureID kSkyTextureID = 0x2fb626d6;   // fnv1a L"Sky"
-    const TextureID kSpaceTextureID = 0xc1c43225; // fnv1a L"Space"
     const MeshID kSkyMeshID = 0x4a986f37; // cube
 
     const VertexShader* pPhongVS = codex.GetVertexShader(kPhongVSID);
@@ -311,6 +342,9 @@ bool MaterialFactory::CreateAllMaterials(ResourceCodex& codex)
         phongMaterialParams.specularExp = 32.0f;
 
         pPhongMaterial->PopulateMaterialParams(codex.GetMatParamsStagingBuffer(), Muon::GetCommandList());
+
+        pPhongMaterial->SetTextureParam("diffuseTexture",   kRockDiffuseId);
+        pPhongMaterial->SetTextureParam("normalMap",        kRockNormalId);
     }
 
 

@@ -134,7 +134,7 @@ bool UploadBuffer::Allocate(UINT desiredSize, UINT alignment, void*& out_mappedP
 	{
 		// We don't have enough space for this allocation
 		// TODO: Maybe do a re-Create() operation? Will be expensive.
-		Muon::Printf("Error: Upload Buffer failed to allocate %u bytes. Only have %u / %u space remaining.", desiredSize, (mBufferSize - aligned), mBufferSize);
+		Muon::Printf("Error: Upload Buffer failed to allocate %u bytes. Only have %u / %u space remaining.\n", desiredSize, (mBufferSize - aligned), mBufferSize);
 		return false;
 	}
 
